@@ -22,7 +22,7 @@ namespace GGFramework.GGNetwork
         /// <param name="type"></param>
         public void RefereshServiceHost(string type, Action<string, string> callback)
         {
-            if (type == null || this.serviceCenterUrl == null)
+            if (type == null || string.IsNullOrEmpty(this.serviceCenterUrl))
             {
                 return;
             }

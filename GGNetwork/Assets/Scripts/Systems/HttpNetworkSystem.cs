@@ -128,6 +128,7 @@ namespace GGFramework.GGNetwork
 
         public void Awake()
         {
+            HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
             HTTPManager.Setup();
         }
 
@@ -266,7 +267,9 @@ namespace GGFramework.GGNetwork
             {
                 throw new Exception("Illegal null http address!!!");
             }
-            command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
+            if (!string.IsNullOrEmpty(command)) {
+                command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
+            }
             if (!string.IsNullOrEmpty(this.httpSecretKey)) {
                 command += "&__sign=" + NetworkUtil.Sign(command, this.httpSecretKey);
             }
@@ -282,9 +285,15 @@ namespace GGFramework.GGNetwork
             {
                 postRequest.AddHeader("Authorization", "Bearer " + HttpNetworkSystem.Token);
             }
-            postRequest.AddHeader("x-deviceId", this.deviceUID);
-            postRequest.AddHeader("x-channel", this.channel);
-            postRequest.AddHeader("x-version", this.clientVersion);
+            if (this.deviceUID != null) {
+                postRequest.AddHeader("x-deviceId", this.deviceUID);
+            }
+            if (this.channel != null) {
+                postRequest.AddHeader("x-channel", this.channel);
+            }
+            if (this.clientVersion != null) {
+                postRequest.AddHeader("x-version", this.clientVersion);
+            }
             postRequest.Callback = (HTTPRequest originalRequest, HTTPResponse response) => {
                 OnRequestFinished(originalRequest, response, exceptionAction, callback);
             };
