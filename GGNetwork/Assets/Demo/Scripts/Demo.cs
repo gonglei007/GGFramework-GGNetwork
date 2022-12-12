@@ -5,7 +5,6 @@ using SimpleJson;
 
 public class Demo : MonoBehaviour
 {
-    public GameMenu gameMenu;
     private const string goodHttpURL = "http://global.gotechgames.com:8080";
     private const string badHttpURL = "http://no.gotechgames.com:8080";
     // Start is called before the first frame update
@@ -15,6 +14,12 @@ public class Demo : MonoBehaviour
         NetworkSystem.Instance.Init();
         HttpNetworkSystem.Instance.onDialog = (string title, string msg, bool retry, Action<bool> callback) =>{
             Debug.Log(title + " | " + msg + " | " + retry.ToString());
+            QuestionDialogUI.Instance.ShowQuestion(title + " | " + msg, () => {
+                // Do things on Yes
+                callback(true);
+            }, () => {
+                // Do things on No
+            });
         };
     }
 
@@ -38,6 +43,20 @@ public class Demo : MonoBehaviour
             JsonObject param = new JsonObject();
             HttpNetworkSystem.Instance.GetWebRequest(badHttpURL, "test", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response) => {
                 Debug.Log(response.ToString());
+            });
+        }
+
+        if (GUI.Button(new Rect(100, 160, 300, 50), "Open Dialog"))
+        {
+            QuestionDialogUI.Instance.ShowQuestion("Are you sure you want to quit the game?", () => {
+                QuestionDialogUI.Instance.ShowQuestion("Are you really sure?", () => {
+                    Application.Quit();
+                    //EditorApplication.ExitPlaymode();
+                }, () => {
+                    // Do nothing
+                });
+            }, () => {
+                // Do nothing on No
             });
         }
     }

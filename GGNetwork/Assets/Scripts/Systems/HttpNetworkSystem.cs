@@ -179,6 +179,20 @@ namespace GGFramework.GGNetwork
             }
         }
 
+        /// <summary>
+        /// 获取（本地化）文本。
+        /// 如果没有复制本地化文本回调，直接传key。
+        /// </summary>
+        /// <param name="text"></param>
+        protected string GetText(string text)
+        {
+            if (onGetText == null)
+            {
+                return text;
+            }
+            return onGetText(text);
+        }
+
         private void DoSendRequest(HTTPRequest request)
         {
             if (onWaiting != null)
@@ -265,7 +279,7 @@ namespace GGFramework.GGNetwork
                 throw new Exception("Illegal null http address!!!");
             }
             command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
-            if (this.httpSecretKey != null) {
+            if (!string.IsNullOrEmpty(this.httpSecretKey)) {
                 command += "&__sign=" + NetworkUtil.Sign(command, this.httpSecretKey);
             }
             GameDebugger.sPushLog(string.Format("url:{0} - command:{1}", httpAddress, command));
@@ -317,25 +331,25 @@ namespace GGFramework.GGNetwork
                     //TODO: GL - 先测试出来，那些情况会有非超时类的异常。超时类的异常本身时间比较长，所以不用自动重试。非超时类的异常如果比较频繁，再处理定时重试的功能。
                     //CommonTools.SetTimeout(2.0f, () => {
                     //});
-                    if (onDialog != null && onGetText != null)
+                    if (onDialog != null)
                     {
-                        onDialog(onGetText("server_error"), message, true, (bool retry) => {
+                        onDialog(this.GetText("server_error"), message, true, (bool retry) => {
                             DoSendRequest(originalRequest);
                         });
                     }
                     break;
                 case ExceptionAction.ConfirmRetry:
-                    if (onDialog != null && onGetText != null)
+                    if (onDialog != null)
                     {
-                        onDialog(onGetText("server_error"), message, true, (bool retry) => {
+                        onDialog(this.GetText("server_error"), message, true, (bool retry) => {
                             DoSendRequest(originalRequest);
                         });
                     }
                     break;
                 case ExceptionAction.Tips:
-                    if (onDialog != null && onGetText != null)
+                    if (onDialog != null)
                     {
-                        onDialog(onGetText("server_error"), message, false, (bool retry) => {
+                        onDialog(this.GetText("server_error"), message, false, (bool retry) => {
                             Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.Uri.ToString());
                         });
                     }
@@ -386,10 +400,10 @@ namespace GGFramework.GGNetwork
                                 code = Convert.ToInt32(responseObj["code"]);
                                 if (code != NetworkConst.CODE_OK)
                                 {
-                                    if (onDialog != null && onGetText != null)
+                                    if (onDialog != null)
                                     {
                                         string message = responseObj["msg"].ToString();
-                                        onDialog(onGetText("server_warning"), message, true, (bool retry) =>
+                                        onDialog(this.GetText("server_warning"), message, true, (bool retry) =>
                                         {
                                             //DoSendRequest(originalRequest);
                                         });
@@ -399,7 +413,7 @@ namespace GGFramework.GGNetwork
                             catch (Exception e)
                             {
                                 // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
-                                OnExceptionHandler(originalRequest, onGetText("ask-server-developer-to-fix" + e.ToString()), ExceptionAction.ConfirmRetry);
+                                OnExceptionHandler(originalRequest, this.GetText("ask-server-developer-to-fix" + e.ToString()), ExceptionAction.ConfirmRetry);
                             }
                             finally
                             {
@@ -420,7 +434,7 @@ namespace GGFramework.GGNetwork
                         if (response.StatusCode != 200)
                         {
                             TriggerResponseError(response.StatusCode);
-                            OnExceptionHandler(originalRequest, onGetText(string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText)), ExceptionAction.ConfirmRetry);
+                            OnExceptionHandler(originalRequest, this.GetText(string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText)), ExceptionAction.ConfirmRetry);
                             return;
                         }
                         //OnExceptionHandler(originalRequest, TextSystem.GetText("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.Tips);
@@ -431,7 +445,7 @@ namespace GGFramework.GGNetwork
                 // The request finished with an unexpected error. The request's Exception property may contain more info about the error.
                 case HTTPRequestStates.Error:
                     Debug.LogError("Request Finished with Error! " + (originalRequest.Exception != null ? (originalRequest.Exception.Message + "\n" + originalRequest.Exception.StackTrace) : "No Exception"));
-                    OnExceptionHandler(originalRequest, onGetText("Connection Timed Out!"), exceptionAction);
+                    OnExceptionHandler(originalRequest, this.GetText("Connection Timed Out!"), exceptionAction);
                     break;
 
                 // The request aborted, initiated by the user.
@@ -447,7 +461,7 @@ namespace GGFramework.GGNetwork
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
                     }
-                    OnExceptionHandler(originalRequest, onGetText("Connection Timed Out!"), exceptionAction);
+                    OnExceptionHandler(originalRequest, this.GetText("Connection Timed Out!"), exceptionAction);
                     break;
 
                 // The request didn't finished in the given time.
@@ -457,7 +471,7 @@ namespace GGFramework.GGNetwork
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
                     }
-                    OnExceptionHandler(originalRequest, onGetText("Processing the request Timed Out!"), exceptionAction);
+                    OnExceptionHandler(originalRequest, this.GetText("Processing the request Timed Out!"), exceptionAction);
                     break;
             }
         }
