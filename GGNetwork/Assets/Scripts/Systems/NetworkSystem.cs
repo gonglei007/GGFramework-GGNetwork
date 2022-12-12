@@ -24,13 +24,17 @@ namespace GGFramework.GGNetwork
             public string host;
             public int port;
         }
-        private Dictionary<string, NetworkClient> clientMap = new Dictionary<string, NetworkClient>();
+        private Dictionary<string, IClient> clientMap = new Dictionary<string, IClient>();
         private Dictionary<string, ServiceInfo> serviceInfoMap = new Dictionary<string, ServiceInfo>();
 
         public NetworkSystem()
         {
             CreateNetworkClient("game", true);
             CreateNetworkClient("notify", false);
+        }
+
+        public void Init()
+        {
         }
 
         public void SetServiceInfo(string service, string url)
@@ -62,9 +66,9 @@ namespace GGFramework.GGNetwork
         /// <param name="name">服务名称</param>
         /// <param name="bindUI">是否有UI响应</param>
         /// <returns></returns>
-        public NetworkClient CreateNetworkClient(string name, bool bindUI)
+        public IClient CreateNetworkClient(string name, bool bindUI)
         {
-            NetworkClient client = new NetworkClient(name);
+            IClient client = new PomeloNetworkClient(name);
             //if (bindUI)
             //{
             //    client.onError = (JsonObject param) => {
@@ -106,7 +110,7 @@ namespace GGFramework.GGNetwork
             return client;
         }
 
-        public NetworkClient GetNetworkClient(string name)
+        public IClient GetNetworkClient(string name)
         {
             if (!clientMap.ContainsKey(name))
             {
@@ -119,7 +123,7 @@ namespace GGFramework.GGNetwork
         {
             foreach (var item in clientMap)
             {
-                NetworkClient client = item.Value;
+                IClient client = item.Value;
                 client.Close();
             }
         }
@@ -128,7 +132,7 @@ namespace GGFramework.GGNetwork
         {
             if (clientMap.ContainsKey(name))
             {
-                NetworkClient client = clientMap[name];
+                IClient client = clientMap[name];
                 client.Close();
             }
         }
@@ -137,7 +141,7 @@ namespace GGFramework.GGNetwork
         {
             if (clientMap.ContainsKey(name))
             {
-                NetworkClient client = clientMap[name];
+                IClient client = clientMap[name];
                 client.Disconnect();
             }
         }
@@ -146,15 +150,15 @@ namespace GGFramework.GGNetwork
         {
             foreach (var item in clientMap)
             {
-                NetworkClient client = item.Value;
+                IClient client = item.Value;
                 client.Update();
             }
         }
 
-        public NetworkClient ConnectNetworkClient(string name, string host, int port, Action<JsonObject> callback)
+        public IClient ConnectNetworkClient(string name, string host, int port, Action<JsonObject> callback)
         {
-            NetworkClient client = GetNetworkClient(name);
-            client.client.disposed = false;
+            IClient client = GetNetworkClient(name);
+            //client.client.disposed = false;
             if (client == null)
             {
                 return null;
@@ -185,7 +189,7 @@ namespace GGFramework.GGNetwork
 
         public void SendRequest(string name, string route, JsonObject message, Action<JsonObject> response)
         {
-            NetworkClient client = GetNetworkClient(name);
+            IClient client = GetNetworkClient(name);
             if (client == null)
             {
                 return;

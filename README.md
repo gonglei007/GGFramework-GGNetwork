@@ -1,6 +1,7 @@
 # GGNetwork
 
 GGFramework框架下的游戏网络框架。提供了游戏客户端所需的网络特性。
+适用于实时性要求不高的SLG、MMO、休闲等类型的游戏。
 
 ## 特性
 * 支持Http连接和Socket连接。
