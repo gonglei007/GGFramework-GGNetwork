@@ -110,9 +110,14 @@ namespace GGFramework.GGNetwork
         }
 
         Dictionary<string, string> serviceUrls = new Dictionary<string, string>();
-        public Action<string, string, bool, Action<bool>> onDialog = null;
-        public Func<string, string> onGetText = null;
-        public Action<bool> onWaiting = null;
+        private UIAdaptor uiAdaptor = new UIAdaptor();
+        public UIAdaptor UIAdaptor
+        {
+            get
+            {
+                return uiAdaptor;
+            }
+        }
         public Action<int> onResponseError = null;
         public INetworkCallback onResponseErrorX = null;
 
@@ -179,26 +184,9 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        /// <summary>
-        /// 获取（本地化）文本。
-        /// 如果没有复制本地化文本回调，直接传key。
-        /// </summary>
-        /// <param name="text"></param>
-        protected string GetText(string text)
-        {
-            if (onGetText == null)
-            {
-                return text;
-            }
-            return onGetText(text);
-        }
-
         private void DoSendRequest(HTTPRequest request)
         {
-            if (onWaiting != null)
-            {
-                onWaiting(true);
-            }
+            uiAdaptor.ShowWaiting(true);
             TaskSystem.Instance.QueueJob(() => {
                 Debug.LogFormat("[thread-{0}]开始请求:{1}", Thread.CurrentThread.ManagedThreadId, request.Uri.ToString());
                 HTTPManager.SendRequest(request);
@@ -331,28 +319,19 @@ namespace GGFramework.GGNetwork
                     //TODO: GL - 先测试出来，那些情况会有非超时类的异常。超时类的异常本身时间比较长，所以不用自动重试。非超时类的异常如果比较频繁，再处理定时重试的功能。
                     //CommonTools.SetTimeout(2.0f, () => {
                     //});
-                    if (onDialog != null)
-                    {
-                        onDialog(this.GetText("server_error"), message, true, (bool retry) => {
-                            DoSendRequest(originalRequest);
-                        });
-                    }
+                    uiAdaptor.ShowDialog("server_error", message, true, (bool retry) => {
+                        DoSendRequest(originalRequest);
+                    });
                     break;
                 case ExceptionAction.ConfirmRetry:
-                    if (onDialog != null)
-                    {
-                        onDialog(this.GetText("server_error"), message, true, (bool retry) => {
-                            DoSendRequest(originalRequest);
-                        });
-                    }
+                    uiAdaptor.ShowDialog("server_error", message, true, (bool retry) => {
+                        DoSendRequest(originalRequest);
+                    });
                     break;
                 case ExceptionAction.Tips:
-                    if (onDialog != null)
-                    {
-                        onDialog(this.GetText("server_error"), message, false, (bool retry) => {
-                            Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.Uri.ToString());
-                        });
-                    }
+                    uiAdaptor.ShowDialog("server_error", message, false, (bool retry) => {
+                        Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.Uri.ToString());
+                    });
                     break;
                 default:
                     break;
@@ -371,10 +350,7 @@ namespace GGFramework.GGNetwork
             Debug.Log("http response:" + originalRequest.Uri.ToString());
             //string serviceType = originalRequest.GetServiceType();
             //Debug.LogFormat(">>>>>>>>>>>>>>>>>请求返回, service type:{0}：", serviceType);
-            if (onWaiting != null)
-            {
-                onWaiting(false);
-            }
+            uiAdaptor.ShowWaiting(false);
             switch (originalRequest.State)
             {
                 // The request finished without any problem.
@@ -400,20 +376,17 @@ namespace GGFramework.GGNetwork
                                 code = Convert.ToInt32(responseObj["code"]);
                                 if (code != NetworkConst.CODE_OK)
                                 {
-                                    if (onDialog != null)
+                                    string message = responseObj["msg"].ToString();
+                                    uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) =>
                                     {
-                                        string message = responseObj["msg"].ToString();
-                                        onDialog(this.GetText("server_warning"), message, true, (bool retry) =>
-                                        {
-                                            //DoSendRequest(originalRequest);
-                                        });
-                                    }
+                                        //DoSendRequest(originalRequest);
+                                    });
                                 }
                             }
                             catch (Exception e)
                             {
                                 // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
-                                OnExceptionHandler(originalRequest, this.GetText("ask-server-developer-to-fix" + e.ToString()), ExceptionAction.ConfirmRetry);
+                                OnExceptionHandler(originalRequest, "ask-server-developer-to-fix" + e.ToString(), ExceptionAction.ConfirmRetry);
                             }
                             finally
                             {
@@ -434,7 +407,7 @@ namespace GGFramework.GGNetwork
                         if (response.StatusCode != 200)
                         {
                             TriggerResponseError(response.StatusCode);
-                            OnExceptionHandler(originalRequest, this.GetText(string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText)), ExceptionAction.ConfirmRetry);
+                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.ConfirmRetry);
                             return;
                         }
                         //OnExceptionHandler(originalRequest, TextSystem.GetText("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.Tips);
@@ -445,7 +418,7 @@ namespace GGFramework.GGNetwork
                 // The request finished with an unexpected error. The request's Exception property may contain more info about the error.
                 case HTTPRequestStates.Error:
                     Debug.LogError("Request Finished with Error! " + (originalRequest.Exception != null ? (originalRequest.Exception.Message + "\n" + originalRequest.Exception.StackTrace) : "No Exception"));
-                    OnExceptionHandler(originalRequest, this.GetText("Connection Timed Out!"), exceptionAction);
+                    OnExceptionHandler(originalRequest, "Connection Timed Out!", exceptionAction);
                     break;
 
                 // The request aborted, initiated by the user.
@@ -461,7 +434,7 @@ namespace GGFramework.GGNetwork
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
                     }
-                    OnExceptionHandler(originalRequest, this.GetText("Connection Timed Out!"), exceptionAction);
+                    OnExceptionHandler(originalRequest, "Connection Timed Out!", exceptionAction);
                     break;
 
                 // The request didn't finished in the given time.
@@ -471,7 +444,7 @@ namespace GGFramework.GGNetwork
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
                     }
-                    OnExceptionHandler(originalRequest, this.GetText("Processing the request Timed Out!"), exceptionAction);
+                    OnExceptionHandler(originalRequest, "Processing the request Timed Out!", exceptionAction);
                     break;
             }
         }
