@@ -5,13 +5,15 @@ using SimpleJson;
 
 public class Demo : MonoBehaviour
 {
-    private const string goodHttpURL = "http://global.gotechgames.com:8080";
-    private const string badHttpURL = "http://no.gotechgames.com:8080";
+    //private const string goodHttpURL = "https://www.baidu.com";
+    private const string goodHttpURL = "http://119.28.57.87:4201";
+    private const string badHttpURL = "http://no.gltop.com:8080";   //"https://api.apiopen.top/singlePoetry";
     // Start is called before the first frame update
     void Start()
     {
         HttpNetworkSystem.Instance.Init();
         NetworkSystem.Instance.Init();
+        ServiceCenter.Instance.Init();
         HttpNetworkSystem.Instance.UIAdaptor.onDialog = (string title, string msg, bool retry, Action<bool> callback) =>{
             Debug.Log(title + " | " + msg + " | " + retry.ToString());
             QuestionDialogUI.Instance.ShowQuestion(title + " | " + msg, () => {
@@ -34,14 +36,14 @@ public class Demo : MonoBehaviour
         if (GUI.Button(new Rect(100, 40, 300, 50), "Good Http Request Test"))
         {
             JsonObject param = new JsonObject();
-            HttpNetworkSystem.Instance.GetWebRequest(goodHttpURL, "test", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response)=>{
+            HttpNetworkSystem.Instance.GetWebRequest(goodHttpURL, "", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response)=>{
                 Debug.Log(response.ToString());
             });
         }
         if (GUI.Button(new Rect(100, 100, 300, 50), "Bad Http Request Test"))
         {
             JsonObject param = new JsonObject();
-            HttpNetworkSystem.Instance.GetWebRequest(badHttpURL, "test", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response) => {
+            HttpNetworkSystem.Instance.GetWebRequest(badHttpURL, "", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response) => {
                 Debug.Log(response.ToString());
             });
         }
