@@ -4,7 +4,9 @@ using SimpleJson;
 namespace GGFramework.GGNetwork
 {
     /// <summary>
-    /// （游戏）网络服务中心类。用来获取跟游戏的网络（而非功能）相关的信息的接口。
+    /// （游戏）网络服务中心类。
+    /// 获取跟游戏的网络（而非功能）相关的信息的接口。
+    /// 网络相关的测试接口。
     /// </summary>
     public class ServiceCenter : Singleton<ServiceCenter>
     {

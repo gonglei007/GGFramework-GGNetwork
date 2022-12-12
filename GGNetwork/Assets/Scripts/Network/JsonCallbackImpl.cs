@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GGFramework.GGNetwork
 {
-    public class JsonCallback : INetworkCallback
+    public class JsonCallbackImpl : INetworkCallback
     {
         public void Call(string response) {
         }

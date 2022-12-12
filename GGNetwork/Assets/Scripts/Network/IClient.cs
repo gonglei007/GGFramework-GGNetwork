@@ -1,31 +1,37 @@
-using UnityEngine;
-using System.Collections;
-using SimpleJson;
-using Pomelo.DotNetClient;
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using SimpleJson;
+using UnityEngine;
 using GGFramework.GGTask;
+using System.Collections;
 
 namespace GGFramework.GGNetwork
 {
-    /// <summary>
-    /// 基于PomeloClient实现的长连接实例。
-    /// 处理连接。
-    /// 处理请求。
-    /// </summary>
-    public class NetworkClient
+    public enum NetWorkState
     {
-        /// <summary>
-        /// 用户未注册
-        /// </summary>
+        CLOSED,
+
+        CONNECTING,
+
+        CONNECTED,
+
+        DISCONNECTED,
+
+        TIMEOUT,
+
+        ERROR
+    }
+
+    public class IClient
+    {
         public static int ConnectTimeout = 8;
         public static int RequestTimeout = 10;
         public static uint AutoReconnectTimes = 3;           // 自动重连次数
                                                              //public static float ReconnectionDelay = 1.0f;
         public static float ReconnectionDelay = 4.0f;
-        public PomeloClient client = new PomeloClient(ConnectTimeout * 1000);
+
         public string host;
         public int port;
         public bool opening = false;    // 设置一个网络连接是否打开。打开状态时，如果网络断开，要持续尝试连接上此连接。
@@ -42,11 +48,10 @@ namespace GGFramework.GGNetwork
         public Action<string, string, bool, Action<bool>> onDialog = null;
         public Func<string, string> onGetText = null;
         public Action<bool> onWaiting = null;
-        private Action<JsonObject> onHandShaked = null;
         private static int messageID = 0;
         private string name = "none";
 
-        private class NetworkEvent
+        public class NetworkEvent
         {
             Action<object> action;
             JsonObject param;
@@ -73,24 +78,51 @@ namespace GGFramework.GGNetwork
 
         private uint reconnectCounter = 0;
 
-        public NetworkClient(string name)
-        {
+        public IClient(string name) {
             this.name = name;
-            onHandShaked += (JsonObject rep) =>
+        }
+
+
+        /// <summary>
+        /// 获取（本地化）文本。
+        /// 如果没有复制本地化文本回调，直接传key。
+        /// </summary>
+        /// <param name="text"></param>
+        protected string GetText(string text)
+        {
+            if (onGetText == null)
             {
-                if (onConnected != null)
-                {
-                    onConnected(rep);
-                }
-            };
-            client.NetWorkStateChangedEvent += (NetWorkState state) =>
+                return text;
+            }
+            return onGetText(text);
+        }
+
+        protected virtual bool IsClientConnected() { return false; }
+
+        protected virtual void initClient()
+        {
+            if (onWaiting != null)
             {
-                Debug.LogWarning("状态变化-发生事件:" + state.ToString());
-                // 因为这个事件可能会在子线程触发，所以先转到消息队列中。
-                JsonObject param = new JsonObject();
-                param["state"] = (int)state;
-                InnerEventTrigger(new NetworkEvent(NetWorkStateChangedHandler, param));
-            };
+                onWaiting(true);
+            }
+        }
+
+        /// <summary>
+        /// 内部连接接口。要在子类实现。
+        /// </summary>
+        protected virtual bool InnerConnect()
+        {
+            return false;
+        }
+
+        protected virtual void InnerRequest(string route, JsonObject msg, Action<JsonObject> callback) { }
+
+        protected IEnumerator delayConnect(float delay)
+        {
+            //Debug.Log("延时:"+delay.ToString());
+            yield return new WaitForSeconds(delay);
+            Debug.LogFormat("...{0}秒|开始第{1}次尝试重连！", delay, reconnectCounter);
+            this.initClient();
         }
 
         /// <summary>
@@ -118,13 +150,7 @@ namespace GGFramework.GGNetwork
         /// 断开连接。
         /// 备注：如果还处于打开状态。则会自动尝试重连。
         /// </summary>
-        public void Disconnect()
-        {
-            if (client.NetworkState == NetWorkState.CONNECTED || client.NetworkState == NetWorkState.CONNECTING)
-            {
-                client.disconnect();
-            }
-        }
+        public virtual void Disconnect() { }
 
         public void Request(NetworkRequest request)
         {
@@ -137,15 +163,58 @@ namespace GGFramework.GGNetwork
             requestList.Add(request);
         }
 
-        public void On(string name, Action<JsonObject> action)
+        /// <summary>
+        /// 执行消息发送。
+        /// 子线程内发送。
+        /// </summary>
+        /// <param name="request"></param>
+        public void DoSendRequest(NetworkRequest request)
         {
-            client.on(name, (JsonObject response) =>
+            Debug.Log("发送Request:" + request.route);
+            request.ChangeState(NetworkRequest.RequestStates.Processing);
+            if (onWaiting != null)
             {
-                InnerEventTrigger(new NetworkEvent((object obj) => {
-                    action(obj as JsonObject);
-                }, response));
-            });
+                onWaiting(true);
+            }
+            if (!IsClientConnected())
+            {
+                // 网络还没有连上，先报个错，然后重试。
+                request.errorMessage = "Network is not connected yet! Please wait a moment!";
+                request.ChangeState(NetworkRequest.RequestStates.Error);
+                OnRequestFinish(request);
+                return;
+            }
+            else
+            {
+                TaskSystem.Instance.QueueJob(() =>
+                {
+                    try
+                    {
+                        // 开始处理请求
+                        request.timer = 0.0f;
+                        InnerRequest(request.route, request.msg, (JsonObject response) =>
+                        {
+                            request.data = response;
+                            // 请求返回结果
+                            request.ChangeState(NetworkRequest.RequestStates.Finished);
+                            InnerDoResponse(request);
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        InnerEventTrigger(new NetworkEvent((object obj) => {
+                            // 请求发生异常
+                            request.errorMessage = e.ToString();
+                            request.ChangeState(NetworkRequest.RequestStates.Error);
+                            OnRequestFinish(request);
+                        }, null));
+                        throw e;
+                    }
+                    return null;
+                });
+            }
         }
+
 
         /// <summary>
         /// 消息请求完成，返回响应。
@@ -272,69 +341,17 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        /// <summary>
-        /// 获取（本地化）文本。
-        /// 如果没有复制本地化文本回调，直接传key。
-        /// </summary>
-        /// <param name="text"></param>
-        private string GetText(string text) {
-            if (onGetText == null) {
-                return text;
-            }
-            return onGetText(text);
+        private void InnerDoResponse(NetworkRequest request)
+        {
+            //Debug.LogWarning("Request进队列:"+request.route);
+            responseQueue.Enqueue(request);
         }
 
-        /// <summary>
-        /// 执行消息发送。
-        /// 子线程内发送。
-        /// </summary>
-        /// <param name="request"></param>
-        private void DoSendRequest(NetworkRequest request)
+        protected void InnerEventTrigger(NetworkEvent networkEvent)
         {
-            Debug.Log("发送Request:" + request.route);
-            request.ChangeState(NetworkRequest.RequestStates.Processing);
-            if (onWaiting != null)
-            {
-                onWaiting(true);
-            }
-            if (client.NetworkState != NetWorkState.CONNECTED)
-            {
-                // 网络还没有连上，先报个错，然后重试。
-                request.errorMessage = "Network is not connected yet! Please wait a moment!";
-                request.ChangeState(NetworkRequest.RequestStates.Error);
-                OnRequestFinish(request);
-                return;
-            }
-            else
-            {
-                TaskSystem.Instance.QueueJob(() =>
-                {
-                    try
-                    {
-                        // 开始处理请求
-                        request.timer = 0.0f;
-                        client.request(request.route, request.msg, (JsonObject response) =>
-                        {
-                            request.data = response;
-                            // 请求返回结果
-                            request.ChangeState(NetworkRequest.RequestStates.Finished);
-                            InnerDoResponse(request);
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        InnerEventTrigger(new NetworkEvent((object obj) => {
-                            // 请求发生异常
-                            request.errorMessage = e.ToString();
-                            request.ChangeState(NetworkRequest.RequestStates.Error);
-                            OnRequestFinish(request);
-                        }, null));
-                        throw e;
-                    }
-                    return null;
-                });
-            }
+            innerEventQueue.Enqueue(networkEvent);
         }
+
         private IEnumerator delayDoSendRequest(NetworkRequest request, float delay)
         {
             Debug.Log("延时:" + delay.ToString());
@@ -350,45 +367,11 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void InnerDoResponse(NetworkRequest request)
-        {
-            //Debug.LogWarning("Request进队列:"+request.route);
-            responseQueue.Enqueue(request);
-        }
-
-        private void InnerEventTrigger(NetworkEvent networkEvent)
-        {
-            innerEventQueue.Enqueue(networkEvent);
-        }
-
-        private void initClient()
-        {
-            if (onWaiting != null)
-            {
-                onWaiting(true);
-            }
-            //Debug.LogFormat("[thread-{0}]准备启动连接任务！", Thread.CurrentThread.ManagedThreadId);
-            TaskSystem.Instance.QueueJob(() =>
-            {
-                Debug.LogFormat("[thread-{0}]开始连接:{1}:{2}", Thread.CurrentThread.ManagedThreadId, host, port);
-                client.initClient(host, port);
-                return null;
-            });
-        }
-
-        private IEnumerator delayConnect(float delay)
-        {
-            //Debug.Log("延时:"+delay.ToString());
-            yield return new WaitForSeconds(delay);
-            Debug.LogFormat("...{0}秒|开始第{1}次尝试重连！", delay, reconnectCounter);
-            this.initClient();
-        }
-
         /// <summary>
         /// 连接状态处理
         /// </summary>
         /// <param name="param"></param>
-        private void NetWorkStateChangedHandler(object obj)
+        protected void NetWorkStateChangedHandler(object obj)
         {
             JsonObject param = obj as JsonObject;
             NetWorkState state = (NetWorkState)param["state"];
@@ -410,18 +393,7 @@ namespace GGFramework.GGNetwork
                     bool connected = false;
                     try
                     {
-                        Debug.Log("开始握手");
-                        connected = client.connect(null, (JsonObject handshakeResult) =>
-                        {
-                            InnerEventTrigger(new NetworkEvent(
-                                (object handshakeObj) =>
-                                {
-                                    JsonObject handshakeParam = handshakeObj as JsonObject;
-                                    this.onHandShaked(handshakeParam);
-                                },
-                                handshakeResult)
-                            );
-                        });
+                        InnerConnect();
                     }
                     catch (Exception e)
                     {

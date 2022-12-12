@@ -1,0 +1,44 @@
+using System;
+using UnityEngine;
+using GGFramework.GGNetwork;
+using SimpleJson;
+
+public class Demo : MonoBehaviour
+{
+    public GameMenu gameMenu;
+    private const string goodHttpURL = "http://global.gotechgames.com:8080";
+    private const string badHttpURL = "http://no.gotechgames.com:8080";
+    // Start is called before the first frame update
+    void Start()
+    {
+        HttpNetworkSystem.Instance.Init();
+        NetworkSystem.Instance.Init();
+        HttpNetworkSystem.Instance.onDialog = (string title, string msg, bool retry, Action<bool> callback) =>{
+            Debug.Log(title + " | " + msg + " | " + retry.ToString());
+        };
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    void OnGUI()
+    {
+        if (GUI.Button(new Rect(100, 40, 300, 50), "Good Http Request Test"))
+        {
+            JsonObject param = new JsonObject();
+            HttpNetworkSystem.Instance.GetWebRequest(goodHttpURL, "test", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response)=>{
+                Debug.Log(response.ToString());
+            });
+        }
+        if (GUI.Button(new Rect(100, 100, 300, 50), "Bad Http Request Test"))
+        {
+            JsonObject param = new JsonObject();
+            HttpNetworkSystem.Instance.GetWebRequest(badHttpURL, "test", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response) => {
+                Debug.Log(response.ToString());
+            });
+        }
+    }
+}

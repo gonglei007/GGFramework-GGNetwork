@@ -265,9 +265,12 @@ namespace GGFramework.GGNetwork
                 throw new Exception("Illegal null http address!!!");
             }
             command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
-            command += "&__sign=" + NetworkUtil.Sign(command, this.httpSecretKey);
+            if (this.httpSecretKey != null) {
+                command += "&__sign=" + NetworkUtil.Sign(command, this.httpSecretKey);
+            }
             GameDebugger.sPushLog(string.Format("url:{0} - command:{1}", httpAddress, command));
             Uri baseUri = new Uri(httpAddress);
+            Debug.Log("Http get: base Uri->"+ baseUri.ToString());
 
             HTTPRequest postRequest = new HTTPRequest(new Uri(baseUri, command));
             postRequest.ConnectTimeout = TimeSpan.FromSeconds(HttpConnectTimeout);
