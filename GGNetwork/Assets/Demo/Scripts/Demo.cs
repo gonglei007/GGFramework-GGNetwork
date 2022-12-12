@@ -12,10 +12,10 @@ public class Demo : MonoBehaviour
     {
         HttpNetworkSystem.Instance.Init();
         NetworkSystem.Instance.Init();
-        HttpNetworkSystem.Instance.onDialog = (string title, string msg, bool retry, Action<bool> callback) =>{
+        HttpNetworkSystem.Instance.UIAdaptor.onDialog = (string title, string msg, bool retry, Action<bool> callback) =>{
             Debug.Log(title + " | " + msg + " | " + retry.ToString());
             QuestionDialogUI.Instance.ShowQuestion(title + " | " + msg, () => {
-                // Do things on Yes
+                // 如果回调传入true,就是让刚刚失败的操作重试。
                 callback(true);
             }, () => {
                 // Do things on No

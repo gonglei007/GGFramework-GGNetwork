@@ -45,9 +45,13 @@ namespace GGFramework.GGNetwork
 
         public Action<NetworkRequest> onRequestError = null;
 
-        public Action<string, string, bool, Action<bool>> onDialog = null;
-        public Func<string, string> onGetText = null;
-        public Action<bool> onWaiting = null;
+        private UIAdaptor uiAdaptor = new UIAdaptor();
+        public UIAdaptor UIAdaptor {
+            get {
+                return uiAdaptor;
+            }
+        }
+
         private static int messageID = 0;
         private string name = "none";
 
@@ -83,28 +87,11 @@ namespace GGFramework.GGNetwork
         }
 
 
-        /// <summary>
-        /// 获取（本地化）文本。
-        /// 如果没有复制本地化文本回调，直接传key。
-        /// </summary>
-        /// <param name="text"></param>
-        protected string GetText(string text)
-        {
-            if (onGetText == null)
-            {
-                return text;
-            }
-            return onGetText(text);
-        }
-
         protected virtual bool IsClientConnected() { return false; }
 
         protected virtual void initClient()
         {
-            if (onWaiting != null)
-            {
-                onWaiting(true);
-            }
+            uiAdaptor.ShowWaiting(true);
         }
 
         /// <summary>
@@ -172,10 +159,7 @@ namespace GGFramework.GGNetwork
         {
             Debug.Log("发送Request:" + request.route);
             request.ChangeState(NetworkRequest.RequestStates.Processing);
-            if (onWaiting != null)
-            {
-                onWaiting(true);
-            }
+            uiAdaptor.ShowWaiting(true);
             if (!IsClientConnected())
             {
                 // 网络还没有连上，先报个错，然后重试。
@@ -225,10 +209,7 @@ namespace GGFramework.GGNetwork
             Debug.LogFormat("Request result!!!-route:{0} | state:{1} | error:{2}", request.route, request.State, request.errorMessage);
             //GameDebugger.Instance.PushLogFormat("Request result!!!-route:{0} | state:{1} | error:{2}", request.route, request.State, request.errorMessage);
             //Debug.Log("Request response->" + request.route);
-            if (onWaiting != null)
-            {
-                onWaiting(false);
-            }
+            uiAdaptor.ShowWaiting(false);
             switch (request.State)
             {
                 case NetworkRequest.RequestStates.Finished:
@@ -248,11 +229,11 @@ namespace GGFramework.GGNetwork
                             {
                                 if (request.data.ContainsKey("msg"))
                                 {
-                                    onDialog(GetText("server_error"), request.data["msg"].ToString(), true, null);
+                                    uiAdaptor.ShowDialog("server_error", request.data["msg"].ToString(), true, null);
                                 }
                                 else
                                 {
-                                    onDialog(GetText("server_error"), "null", true, null);
+                                    uiAdaptor.ShowDialog("server_error", "null", true, null);
                                 }
                             }
                             else if (code != NetworkConst.CODE_FA_REPEAT_MSG &&  // 不是重复消息
@@ -264,7 +245,7 @@ namespace GGFramework.GGNetwork
                         else
                         {
                             GameDebugger.sPushLog("Invalid response data!!!" + request.data.ToString());
-                            onDialog(GetText("server_error"), "server_error", true, null);
+                            uiAdaptor.ShowDialog("server_error", "server_error", true, null);
                         }
                     }
                     catch (Exception e)
@@ -376,10 +357,7 @@ namespace GGFramework.GGNetwork
             JsonObject param = obj as JsonObject;
             NetWorkState state = (NetWorkState)param["state"];
             //Debug.LogFormat("NetWork State Changed:{0} | Thread:{1}", state.ToString(), Thread.CurrentThread.ManagedThreadId);
-            if (onWaiting != null)
-            {
-                onWaiting(false);
-            }
+            uiAdaptor.ShowWaiting(false);
             switch (state)
             {
                 case NetWorkState.CLOSED:
@@ -397,17 +375,17 @@ namespace GGFramework.GGNetwork
                     }
                     catch (Exception e)
                     {
-                        OnConnectExceptionHandler(GetText("handshake_local_failed"));// "Pomelo protocol init(handshake) local failed!-" + e.ToString());
+                        OnConnectExceptionHandler("handshake_local_failed");// "Pomelo protocol init(handshake) local failed!-" + e.ToString());
                     }
                     if (!connected)
                     {
-                        OnConnectExceptionHandler(GetText("handshake_remote_failed"));// "Pomelo protocol init(handshake) remote failed!");
+                        OnConnectExceptionHandler("handshake_remote_failed");// "Pomelo protocol init(handshake) remote failed!");
                     }
                     break;
                 case NetWorkState.CONNECTING:
                     break;
                 case NetWorkState.TIMEOUT:  //连接超时
-                    OnConnectExceptionHandler(GetText("connect_timeout"));// string.Format("Connect timeout!host:{0}-port:{1}", this.host, this.port));
+                    OnConnectExceptionHandler("connect_timeout");// string.Format("Connect timeout!host:{0}-port:{1}", this.host, this.port));
                     if (onConnectionTimeout != null)
                     {
                         onConnectionTimeout(null);
@@ -421,10 +399,10 @@ namespace GGFramework.GGNetwork
                         onClose(ret);
                     }
                     // 如果opening为true，则尝试重连
-                    OnConnectExceptionHandler(GetText("network_disconnected"));
+                    OnConnectExceptionHandler("network_disconnected");
                     break;
                 case NetWorkState.ERROR:
-                    OnConnectExceptionHandler(GetText("connect_error"));//string.Format("Connect error!host:{0}-port:{1}", this.host, this.port));
+                    OnConnectExceptionHandler("connect_error");//string.Format("Connect error!host:{0}-port:{1}", this.host, this.port));
                     break;
             }
         }
@@ -441,7 +419,7 @@ namespace GGFramework.GGNetwork
                     onError(param);
                 }
                 // 如果是后台尝试或者没有UI弹框，则自动重连。
-                if (background || onDialog == null)
+                if (background || uiAdaptor.onDialog == null)
                 {
                     // （持续）延时连接
                     CoroutineUtil.DoCoroutine(delayConnect(ReconnectionDelay));
@@ -450,20 +428,12 @@ namespace GGFramework.GGNetwork
                 {
                     if (reconnectCounter >= AutoReconnectTimes)
                     {
-                        if (onDialog != null)
+                        uiAdaptor.ShowDialog("ws_network_error", errorMessage, true, (bool retry) =>
                         {
-                            onDialog(GetText("ws_network_error"), errorMessage, true, (bool retry) =>
-                            {
-                                // 不管点什么都重试
-                                Debug.Log("[有UI]手动重连!");
-                                CoroutineUtil.DoCoroutine(delayConnect(0.0f));
-                            });
-                        }
-                        else
-                        {
-                            Debug.Log("[无UI]手动重连!");
+                            // 不管点什么都重试
+                            Debug.Log("[有UI]手动重连!");
                             CoroutineUtil.DoCoroutine(delayConnect(0.0f));
-                        }
+                        });
                         reconnectCounter = 0;
                     }
                     else
