@@ -61,6 +61,18 @@ namespace GGFramework.GGNetwork
             }
         }
 
+        public bool enablePreProcessParam = false;    // 是否开启参数预处理，如果开启，会在参数前加入签名等。这就需要服务端支持。
+        public bool EnablePreProcessParam {
+            set
+            {
+                enablePreProcessParam = true;
+            }
+            get
+            {
+                return enablePreProcessParam;
+            }
+        }
+
         private string httpSecretKey = null;
         private string deviceUID = null;
         private string channel = null;
@@ -68,7 +80,7 @@ namespace GGFramework.GGNetwork
 
         public void Awake()
         {
-            HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
+            //HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
             HTTPManager.Setup();
         }
 
@@ -145,6 +157,28 @@ namespace GGFramework.GGNetwork
             });
         }
 
+        private void PreProcessParam(JsonObject paramObject) {
+            if (this.EnablePreProcessParam) {
+                paramObject["__timestamp"] = NetworkUtil.GetTimeStamp();
+                paramObject["__sign"] = NetworkUtil.Sign(paramObject, this.httpSecretKey);
+            }
+        }
+
+        private string PreProcessParam(string command) {
+            if (this.EnablePreProcessParam)
+            {
+                if (!string.IsNullOrEmpty(command))
+                {
+                    command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
+                }
+                if (!string.IsNullOrEmpty(this.httpSecretKey))
+                {
+                    command += "&__sign=" + NetworkUtil.Sign(command, this.httpSecretKey);
+                }
+            }
+            return command;
+        }
+
         /// <summary>
         /// 此接口为底层接口。建议使用的时候使用应用层的接口，那里会根据接口类型来决定使用哪种异常响应。
         /// </summary>
@@ -156,8 +190,7 @@ namespace GGFramework.GGNetwork
         public HTTPRequest PostWebRequest(string httpAddress, string command, JsonObject paramObject, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             Debug.Assert(httpAddress != null && paramObject != null, "Illegal parameters!!!");
-            paramObject["__timestamp"] = NetworkUtil.GetTimeStamp();
-            paramObject["__sign"] = NetworkUtil.Sign(paramObject, this.httpSecretKey);
+            PreProcessParam(paramObject);
             return PostWebRequest(httpAddress, command, paramObject.ToString(), "application/json; charset=UTF-8", null, exceptionAction, callback);
         }
 
@@ -226,12 +259,7 @@ namespace GGFramework.GGNetwork
             {
                 throw new Exception("Illegal null http address!!!");
             }
-            if (!string.IsNullOrEmpty(command)) {
-                command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
-            }
-            if (!string.IsNullOrEmpty(this.httpSecretKey)) {
-                command += "&__sign=" + NetworkUtil.Sign(command, this.httpSecretKey);
-            }
+            command = PreProcessParam(command);
             GameDebugger.sPushLog(string.Format("url:{0} - command:{1}", httpAddress, command));
             Uri baseUri = new Uri(httpAddress);
             Debug.Log("Http get: base Uri->"+ baseUri.ToString());
@@ -315,55 +343,61 @@ namespace GGFramework.GGNetwork
         /// <param name="callback"></param>
         public void OnRequestFinished(HTTPRequest originalRequest, HTTPResponse response, ExceptionAction exceptionAction, Action<JsonObject> callback)
         {
-            Debug.LogFormat("<=thread id:{0}", Thread.CurrentThread.ManagedThreadId);
-            Debug.Log("http response:" + originalRequest.Uri.ToString());
+            //Debug.LogFormat("<=thread id:{0}", Thread.CurrentThread.ManagedThreadId);
+            Debug.Log("originalRequest.State:" + originalRequest.State.ToString());
             //string serviceType = originalRequest.GetServiceType();
             //Debug.LogFormat(">>>>>>>>>>>>>>>>>请求返回, service type:{0}：", serviceType);
             uiAdaptor.ShowWaiting(false);
+            // Everything went as expected!
+            //if (response == null)
+            //{
+            //    Debug.LogWarning("http response is null!");
+            //    OnExceptionHandler(originalRequest, string.Format("Http response is null!Fix it on server side!"), ExceptionAction.ConfirmRetry);
+            //    return;
+            //}
             switch (originalRequest.State)
             {
                 // The request finished without any problem.
                 case HTTPRequestStates.Finished:
                     if (response.IsSuccess)
                     {
-                        // Everything went as expected!
-                        if (response == null)
-                        {
-                            Debug.LogWarning("http response is null!");
-                            return;
-                        }
+                        Debug.Log("http response:" + response.DataAsText.ToString());
                         Debug.Log("http response status:" + response.StatusCode.ToString());
                         //Debug.Log("http response data:" + response.DataAsText);
                         if (callback != null)
                         {
-                            Debug.LogFormat("==:thread id:{0}", Thread.CurrentThread.ManagedThreadId);
+                            //Debug.LogFormat("==:thread id:{0}", Thread.CurrentThread.ManagedThreadId);
                             int code = NetworkConst.CODE_FAILED;
                             JsonObject responseObj = null;
                             try
                             {
                                 string message = null;
-                                responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(response.DataAsText);
-                                code = Convert.ToInt32(responseObj["code"]);
-                                if (code != NetworkConst.CODE_OK)
+                                if (this.ParamType == EParamType.Json)
                                 {
-                                    message = responseObj["msg"].ToString();
-                                    uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) =>
+                                    responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(response.DataAsText);
+                                    if (responseObj.ContainsKey("code"))
                                     {
-                                        //DoSendRequest(originalRequest);
-                                    });
+                                        code = Convert.ToInt32(responseObj["code"]);
+                                    }
+                                    if (code != NetworkConst.CODE_OK)
+                                    {
+                                        message = responseObj["msg"].ToString();
+                                        uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) =>
+                                        {
+                                            //DoSendRequest(originalRequest);
+                                        });
+                                    }
                                 }
+                                else if (this.ParamType == EParamType.Text) {
+                                    responseObj = new JsonObject();
+                                    responseObj["response"] = response.DataAsText;
+                                }
+
                             }
                             catch (Exception e)
                             {
-                                if (this.ParamType == EParamType.Json)
-                                {
-                                    // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
-                                    OnExceptionHandler(originalRequest, string.Format("[{0}]ask-server-developer-to-fix. {1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), ExceptionAction.ConfirmRetry);
-                                }
-                                else if (this.ParamType == EParamType.Text)
-                                {
-                                    Debug.Log("");
-                                }
+                                // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
+                                OnExceptionHandler(originalRequest, string.Format("[{0}]ask-server-developer-to-fix. {1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), ExceptionAction.ConfirmRetry);
                             }
                             finally
                             {
