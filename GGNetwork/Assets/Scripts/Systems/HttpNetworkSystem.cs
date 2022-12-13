@@ -9,70 +9,10 @@ using GGFramework.GGTask;
 
 namespace GGFramework.GGNetwork
 {
-    public class RequestItem
-    {
-        public HttpNetworkSystem.RequestType requestType;
-
-        public string httpAddress;
-
-        public string command;
-
-        public string paramData;
-
-        public Encoding dataEncode;
-
-        public HttpNetworkSystem.ExceptionAction exceptionAction;
-
-        public Action<JsonObject> callback;
-
-        public bool isRetry = false;//此请求是否在自动重试
-
-        public int retryNum = 1;//重试次数
-
-        public float retryTime = 1.0f;//重试间隔
-
-        public RequestItem(HttpNetworkSystem.RequestType requestType, string httpAddress, string command, string paramData, Encoding dataEncode, HttpNetworkSystem.ExceptionAction exceptionAction, Action<JsonObject> callback)
-        {
-            this.requestType = requestType;
-            this.httpAddress = httpAddress;
-            this.command = command;
-            this.paramData = paramData;
-            this.dataEncode = dataEncode;
-            this.exceptionAction = exceptionAction;
-            this.callback = callback;
-        }
-    }
-
-    public static class HTTPRequestAdapter
-    {
-        private static Dictionary<HTTPRequest, string> serviceTypeMap = new Dictionary<HTTPRequest, string>();
-
-        public static void SetServiceType(this HTTPRequest request, string serviceType)
-        {
-            serviceTypeMap[request] = serviceType;
-            Debug.Log(">>set service type:" + request.Uri.ToString());
-        }
-
-        public static string GetServiceType(this HTTPRequest request)
-        {
-            if (request == null)
-            {
-                throw new Exception("Illegal http request!");
-            }
-            Debug.Log(">>get service type:" + request.Uri.ToString());
-            if (!serviceTypeMap.ContainsKey(request))
-            {
-                return null;
-                //throw new Exception("http request in map lost!!!");
-            }
-            return serviceTypeMap[request];
-        }
-    }
-
     /// <summary>
-    /// Htpp请求的Manager。
+    /// Http网络系统，是Htpp请求的总入口。
     /// 实现了超时重试，暂时只确保一次一个请求。
-    /// TODO: GL - 异常：1. 网络异常，弹出确认框；2. 服务器异常，弹出确认框，点击确定退出、以后做点击确认跳转官网。
+    /// 异常处理：1. 网络异常，弹出确认框；2. 服务器异常，弹出确认框，点击确定退出、以后做点击确认跳转官网。
     /// TODO: GL - 将来视需求来决定是否需要实现并行多个请求。
     /// TODO: CWW 1.将客户端逻辑错误从网络错误的try中分离 2.RequestItem改为队列模式 3.服务器错误弹窗 4.客户端网络错误分三种情况：
     /// TODO: 异常信息的文本Key
@@ -80,22 +20,6 @@ namespace GGFramework.GGNetwork
     /// </summary>
     public class HttpNetworkSystem : Singleton<HttpNetworkSystem>
     {
-        //TODO: GL - 从服务端获取、更新此参数
-        public int HttpConnectTimeout = 8;
-        public int HttpRequestTimeout = 10;
-
-        public enum RequestType
-        {
-            Get,
-            Post
-        }
-
-        public enum RequsetCallBackType
-        {
-            NeedRemoveItemsAddCallBack,
-            RetryRequestCallback
-        }
-
         public enum ExceptionAction
         {
             Ignore,
@@ -109,6 +33,12 @@ namespace GGFramework.GGNetwork
             Tips,
         }
 
+        public enum EParamType
+        {
+            Text,
+            Json,
+        }
+
         Dictionary<string, string> serviceUrls = new Dictionary<string, string>();
         private UIAdaptor uiAdaptor = new UIAdaptor();
         public UIAdaptor UIAdaptor
@@ -120,6 +50,16 @@ namespace GGFramework.GGNetwork
         }
         public Action<int> onResponseError = null;
         public INetworkCallback onResponseErrorX = null;
+
+        EParamType paramType = EParamType.Json;
+        public EParamType ParamType {
+            set {
+                paramType = value;
+            }
+            get {
+                return paramType;
+            }
+        }
 
         private string httpSecretKey = null;
         private string deviceUID = null;
@@ -140,7 +80,12 @@ namespace GGFramework.GGNetwork
             this.clientVersion = clientVersion;
         }
 
-        public void SetServiceUrl(string service, string url)
+        /// <summary>
+        /// 暂不开放
+        /// </summary>
+        /// <param name="service"></param>
+        /// <param name="url"></param>
+        private void SetServiceUrl(string service, string url)
         {
             Uri uriResult;
             bool result = Uri.TryCreate(url, UriKind.Absolute, out uriResult)
@@ -154,7 +99,12 @@ namespace GGFramework.GGNetwork
             serviceUrls[service] = url;
         }
 
-        public string GetServiceUrl(string service)
+        /// <summary>
+        /// 暂不开放
+        /// </summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        private string GetServiceUrl(string service)
         {
             if (!serviceUrls.ContainsKey(service))
             {
@@ -236,8 +186,8 @@ namespace GGFramework.GGNetwork
             byte[] byteArray = Encoding.UTF8.GetBytes(paramString);
             HTTPRequest postRequest = new HTTPRequest(new Uri(baseUri, command));
             //TODO: 这个时间设定是给普通的post、get消息请求的。对于下载请求，需要另外设置超时。
-            postRequest.ConnectTimeout = TimeSpan.FromSeconds(HttpConnectTimeout);
-            postRequest.Timeout = TimeSpan.FromSeconds(HttpRequestTimeout);
+            postRequest.ConnectTimeout = TimeSpan.FromSeconds(ServiceCenter.HttpConnectTimeout);
+            postRequest.Timeout = TimeSpan.FromSeconds(ServiceCenter.HttpRequestTimeout);
             postRequest.MethodType = HTTPMethods.Post;
             postRequest.AddHeader("Content-Type", contentType);
             postRequest.AddHeader("Content-Length", byteArray.Length.ToString());
@@ -246,9 +196,18 @@ namespace GGFramework.GGNetwork
                 postRequest.AddHeader("Authorization", "Bearer " + HttpNetworkSystem.Token);
             }
 
-            postRequest.AddHeader("x-deviceId", this.deviceUID);
-            postRequest.AddHeader("x-channel", this.channel);
-            postRequest.AddHeader("x-version", this.clientVersion);
+            if (this.deviceUID != null)
+            {
+                postRequest.AddHeader("x-deviceId", this.deviceUID);
+            }
+            if (this.channel != null)
+            {
+                postRequest.AddHeader("x-channel", this.channel);
+            }
+            if (this.clientVersion != null)
+            {
+                postRequest.AddHeader("x-version", this.clientVersion);
+            }
             if (form != null)
             {
                 postRequest.SetForm(form);
@@ -278,8 +237,8 @@ namespace GGFramework.GGNetwork
             Debug.Log("Http get: base Uri->"+ baseUri.ToString());
 
             HTTPRequest postRequest = new HTTPRequest(new Uri(baseUri, command));
-            postRequest.ConnectTimeout = TimeSpan.FromSeconds(HttpConnectTimeout);
-            postRequest.Timeout = TimeSpan.FromSeconds(HttpRequestTimeout);
+            postRequest.ConnectTimeout = TimeSpan.FromSeconds(ServiceCenter.HttpConnectTimeout);
+            postRequest.Timeout = TimeSpan.FromSeconds(ServiceCenter.HttpRequestTimeout);
             postRequest.MethodType = HTTPMethods.Get;
             if (HttpNetworkSystem.Token != null)
             {
@@ -339,6 +298,7 @@ namespace GGFramework.GGNetwork
                     break;
                 case ExceptionAction.Tips:
                     uiAdaptor.ShowDialog("server_error", message, false, (bool retry) => {
+                        //TODO: 通过uiAdaptor.ShowInfo(Type[tip/dialog])来展示信息。
                         Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.Uri.ToString());
                     });
                     break;
@@ -377,15 +337,16 @@ namespace GGFramework.GGNetwork
                         if (callback != null)
                         {
                             Debug.LogFormat("==:thread id:{0}", Thread.CurrentThread.ManagedThreadId);
-                            JsonObject responseObj = null;
                             int code = NetworkConst.CODE_FAILED;
+                            JsonObject responseObj = null;
                             try
                             {
+                                string message = null;
                                 responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(response.DataAsText);
                                 code = Convert.ToInt32(responseObj["code"]);
                                 if (code != NetworkConst.CODE_OK)
                                 {
-                                    string message = responseObj["msg"].ToString();
+                                    message = responseObj["msg"].ToString();
                                     uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) =>
                                     {
                                         //DoSendRequest(originalRequest);
@@ -394,8 +355,15 @@ namespace GGFramework.GGNetwork
                             }
                             catch (Exception e)
                             {
-                                // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
-                                OnExceptionHandler(originalRequest, "ask-server-developer-to-fix" + e.ToString(), ExceptionAction.ConfirmRetry);
+                                if (this.ParamType == EParamType.Json)
+                                {
+                                    // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
+                                    OnExceptionHandler(originalRequest, "ask-server-developer-to-fix" + e.ToString(), ExceptionAction.ConfirmRetry);
+                                }
+                                else if (this.ParamType == EParamType.Text)
+                                {
+                                    Debug.Log("");
+                                }
                             }
                             finally
                             {
@@ -413,7 +381,7 @@ namespace GGFramework.GGNetwork
                                                         response.StatusCode,
                                                         response.Message,
                                                         response.DataAsText));
-                        if (response.StatusCode != 200)
+                        if (response.StatusCode != NetworkConst.CODE_OK)
                         {
                             TriggerResponseError(response.StatusCode);
                             OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.ConfirmRetry);

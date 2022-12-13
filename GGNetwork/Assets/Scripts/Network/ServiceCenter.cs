@@ -10,6 +10,10 @@ namespace GGFramework.GGNetwork
     /// </summary>
     public class ServiceCenter : Singleton<ServiceCenter>
     {
+        //TODO: GL - 从服务端获取、更新此参数
+        public static int HttpConnectTimeout = 8;
+        public static int HttpRequestTimeout = 10;
+
         private string serviceCenterUrl = null;     // 服务中心的地址。
 
         public void Init(string serviceCenterUrl = null) {
