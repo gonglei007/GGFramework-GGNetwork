@@ -6,6 +6,11 @@ namespace GGFramework.GGNetwork
 {
     public class GameNetworkSystem : Singleton<GameNetworkSystem>
     {
+        public void Init() {
+            HttpNetworkSystem.Instance.Init();
+            NetworkSystem.Instance.Init();
+            ServiceCenter.Instance.Init();
+        }
     }
 }
 

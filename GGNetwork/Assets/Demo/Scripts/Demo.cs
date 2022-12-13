@@ -11,9 +11,7 @@ public class Demo : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        HttpNetworkSystem.Instance.Init();
-        NetworkSystem.Instance.Init();
-        ServiceCenter.Instance.Init();
+        GameNetworkSystem.Instance.Init();
         HttpNetworkSystem.Instance.UIAdaptor.onDialog = (string title, string msg, bool retry, Action<bool> callback) =>{
             Debug.Log(title + " | " + msg + " | " + retry.ToString());
             QuestionDialogUI.Instance.ShowQuestion(title + " | " + msg, () => {
@@ -33,14 +31,16 @@ public class Demo : MonoBehaviour
 
     void OnGUI()
     {
-        if (GUI.Button(new Rect(100, 40, 300, 50), "Good Http Request Test"))
+        const int ButtonWidth = 300;
+        const int ButtonHeight = 50;
+        if (GUI.Button(new Rect(100, 40, ButtonWidth, ButtonHeight), "Good Http Get Request"))
         {
             JsonObject param = new JsonObject();
             HttpNetworkSystem.Instance.GetWebRequest(goodHttpURL, "", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response)=>{
                 Debug.Log(response.ToString());
             });
         }
-        if (GUI.Button(new Rect(100, 100, 300, 50), "Bad Http Request Test"))
+        if (GUI.Button(new Rect(100, 100, ButtonWidth, ButtonHeight), "Bad Http Get Request"))
         {
             JsonObject param = new JsonObject();
             HttpNetworkSystem.Instance.GetWebRequest(badHttpURL, "", HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response) => {
@@ -48,7 +48,7 @@ public class Demo : MonoBehaviour
             });
         }
 
-        if (GUI.Button(new Rect(100, 160, 300, 50), "Open Dialog"))
+        if (GUI.Button(new Rect(100, 160, ButtonWidth, ButtonHeight), "Test Dialog"))
         {
             QuestionDialogUI.Instance.ShowQuestion("Are you sure you want to quit the game?", () => {
                 QuestionDialogUI.Instance.ShowQuestion("Are you really sure?", () => {
