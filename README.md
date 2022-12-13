@@ -14,6 +14,26 @@ GGFramework框架下的游戏网络框架。提供了游戏客户端所需的网
 * Scripts: 代码。
 * Demo: 演示工程。
 
+## 工程依赖
+<div>
+	<table>
+		<tr>
+			<td>
+			Best Http
+			</td>
+			<td>
+			</td>
+		<tr>
+			<td>
+			UnityZip
+			</td>
+			<td>
+			</td>
+		</tr>
+		</tr>
+	</table>
+</div>
+
 ## 快速使用
 ### 1.导入
 * [TODO]复制DLL到游戏工程。
@@ -58,4 +78,5 @@ HttpNetworkSystem.Instance.GetWebRequest("http://url", "command", HttpNetworkSys
 
 ```
 
+## 进群沟通
 * QQ群: 242500383 [![GLTOP游戏研发与技术1群](https://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=fy4Z65nE-5Jd1ay8FkJpDc9iPJyW3d38&jump_from=webapi) 
