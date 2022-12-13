@@ -358,7 +358,7 @@ namespace GGFramework.GGNetwork
                                 if (this.ParamType == EParamType.Json)
                                 {
                                     // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
-                                    OnExceptionHandler(originalRequest, "ask-server-developer-to-fix" + e.ToString(), ExceptionAction.ConfirmRetry);
+                                    OnExceptionHandler(originalRequest, string.Format("[{0}]ask-server-developer-to-fix. {1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), ExceptionAction.ConfirmRetry);
                                 }
                                 else if (this.ParamType == EParamType.Text)
                                 {
