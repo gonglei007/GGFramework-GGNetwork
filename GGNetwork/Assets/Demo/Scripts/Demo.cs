@@ -22,6 +22,9 @@ public class Demo : MonoBehaviour
                 // Do things on No
             });
         };
+        HttpNetworkSystem.Instance.LogAdaptor.onPostError = (string id, string info) => {
+            Debug.LogErrorFormat("Post error info to host. [{0}] | {1}", id, info);
+        };
     }
 
     // Update is called once per frame

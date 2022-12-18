@@ -14,5 +14,18 @@ namespace GGFramework.GGNetwork
         public const int CODE_RESPONSE_MSG_ERROR = 3001;           // 响应消息错误（比如不是JSON）
 
         public const string ERROR_MESSAGE = "network_error";
+
+        public static string httpSecretKey = null;
+        public static string deviceUID = null;
+        public static string channel = null;
+        public static string clientVersion = null;
+
+        public static void InitEx(string secretKey = null, string deviceUID = null, string channel = null, string clientVersion = null)
+        {
+            NetworkConst.httpSecretKey = secretKey;
+            NetworkConst.deviceUID = deviceUID;
+            NetworkConst.channel = channel;
+            NetworkConst.clientVersion = clientVersion;
+        }
     }
 }

@@ -107,7 +107,7 @@ namespace GGFramework.GGNetwork
         //public void DoDownload(HTTPRequest request) {
         //}
 
-        public HTTPRequest RequestDownload(string url, string downloadPath, Action<float> progress, Action<int> total, Action<string> complete)
+        public BestHTTP.HTTPRequest RequestDownload(string url, string downloadPath, Action<float> progress, Action<int> total, Action<string> complete)
         {
             if (File.Exists(downloadPath))
             {
@@ -119,7 +119,7 @@ namespace GGFramework.GGNetwork
                 Directory.CreateDirectory(targetFilePath);
             }
 
-            HTTPRequest request = new HTTPRequest(new Uri(url), (req, resp) =>
+            BestHTTP.HTTPRequest request = new BestHTTP.HTTPRequest(new Uri(url), (req, resp) =>
             {
                 OnRequestFinished(req, resp, downloadPath, complete);
 
@@ -156,7 +156,7 @@ namespace GGFramework.GGNetwork
             DownlaodFile._Instance.ClearData();
         }
 
-        private IEnumerator DelayDownload(HTTPRequest request, float delay)
+        private IEnumerator DelayDownload(BestHTTP.HTTPRequest request, float delay)
         {
             yield return new WaitForSeconds(delay);
             HTTPManager.SendRequest(request);
@@ -177,7 +177,7 @@ namespace GGFramework.GGNetwork
             return length;
         }
 
-        public void OnRequestFinished(HTTPRequest originalRequest, HTTPResponse response, string downloadPath, Action<string> callback)
+        public void OnRequestFinished(BestHTTP.HTTPRequest originalRequest, BestHTTP.HTTPResponse response, string downloadPath, Action<string> callback)
         {
             FileStream fs = originalRequest.Tag as System.IO.FileStream;
             string status = "";
@@ -278,7 +278,7 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void OnExceptionHandler(HTTPRequest originalRequest, string downloadPath, string message)
+        private void OnExceptionHandler(BestHTTP.HTTPRequest originalRequest, string downloadPath, string message)
         {
             Debug.LogError("Download exception:" + message + "\n" + originalRequest.Uri.ToString());
             //Debug.LogWarning("thread id-"+System.Threading.Thread.CurrentThread.ManagedThreadId);
