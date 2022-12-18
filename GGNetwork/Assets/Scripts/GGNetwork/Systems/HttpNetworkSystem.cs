@@ -262,6 +262,10 @@ namespace GGFramework.GGNetwork
             //    //    SetServiceUrl(type, host);
             //    //});
             //}
+            if (this.uiAdaptor == null) {
+                // 如果没有UIAdaptor,就不走重试流程，直接走提示，然后结束。
+                exceptionAction = ExceptionAction.Tips;
+            }
             switch (exceptionAction)
             {
                 case ExceptionAction.AutoRetry:

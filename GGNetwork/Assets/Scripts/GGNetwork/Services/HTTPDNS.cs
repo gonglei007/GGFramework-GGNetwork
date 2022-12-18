@@ -60,14 +60,22 @@ namespace GGFramework.GGNetwork
             }
             //JsonObject param = new JsonObject();
             //param["domain"] = domain;
-            HttpNetworkSystem.Instance.GetServiceRequest(this.apiHost, "domain="+domain, HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response)=> {
+            HttpNetworkSystem.Instance.GetWebRequest(this.apiHost, "?domain="+domain, HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response)=> {
                 if (response == null)
                 {
                     //TODO
+                    Debug.LogErrorFormat("Request http dns failed!-{0}", response.ToString());
                     callback(ip, EStatus.RET_ERROR_RESULT);
                 }
                 else {
-                    // ip = response["ip"];
+                    if (!response.ContainsKey("ipv4")) {
+                        Debug.LogErrorFormat("Host responses wrong message:{0}", response.ToString());
+                        callback(null, EStatus.RET_ERROR_RESULT);
+                        return;
+                    }
+                    string ip = null;
+                    ip = response["ipv4"].ToString();
+                    Debug.LogFormat("Response result:{0}", response.ToString());
                     callback(ip, EStatus.RET_SUCCESS);
                 }
             });
