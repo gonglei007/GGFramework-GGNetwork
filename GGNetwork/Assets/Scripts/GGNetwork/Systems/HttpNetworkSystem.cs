@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using BestHTTP;
+//using BestHTTP;
 using System.Threading;
 using SimpleJson;
 using System.Text;
@@ -48,6 +48,14 @@ namespace GGFramework.GGNetwork
                 return uiAdaptor;
             }
         }
+        private LogAdaptor logAdaptor = new LogAdaptor();
+        public LogAdaptor LogAdaptor
+        {
+            get
+            {
+                return logAdaptor;
+            }
+        }
         public Action<int> onResponseError = null;
         public INetworkCallback onResponseErrorX = null;
 
@@ -62,7 +70,8 @@ namespace GGFramework.GGNetwork
         }
 
         public bool enablePreProcessParam = false;    // 是否开启参数预处理，如果开启，会在参数前加入签名等。这就需要服务端支持。
-        public bool EnablePreProcessParam {
+        public bool EnablePreProcessParam
+        {
             set
             {
                 enablePreProcessParam = true;
@@ -73,23 +82,16 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private string httpSecretKey = null;
-        private string deviceUID = null;
-        private string channel = null;
-        private string clientVersion = null;
 
         public void Awake()
         {
             //HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
-            HTTPManager.Setup();
+            BestHTTP.HTTPManager.Setup();
         }
 
-        public void Init(string secretKey=null, string deviceUID = null, string channel = null, string clientVersion = null)
+        public void Init()
         {
-            this.httpSecretKey = secretKey;
-            this.deviceUID = deviceUID;
-            this.channel = channel;
-            this.clientVersion = clientVersion;
+            //TODO: 
         }
 
         /// <summary>
@@ -147,36 +149,14 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void DoSendRequest(HTTPRequest request)
+        private void DoSendRequest(GGHTTPRequest request)
         {
             uiAdaptor.ShowWaiting(true);
             TaskSystem.Instance.QueueJob(() => {
-                Debug.LogFormat("[thread-{0}]开始请求:{1}", Thread.CurrentThread.ManagedThreadId, request.Uri.ToString());
-                HTTPManager.SendRequest(request);
+                Debug.LogFormat("[thread-{0}]开始请求:{1}", Thread.CurrentThread.ManagedThreadId, request.request.Uri.ToString());
+                BestHTTP.HTTPManager.SendRequest(request.request);
                 return null;
             });
-        }
-
-        private void PreProcessParam(JsonObject paramObject) {
-            if (this.EnablePreProcessParam) {
-                paramObject["__timestamp"] = NetworkUtil.GetTimeStamp();
-                paramObject["__sign"] = NetworkUtil.Sign(paramObject, this.httpSecretKey);
-            }
-        }
-
-        private string PreProcessParam(string command) {
-            if (this.EnablePreProcessParam)
-            {
-                if (!string.IsNullOrEmpty(command))
-                {
-                    command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
-                }
-                if (!string.IsNullOrEmpty(this.httpSecretKey))
-                {
-                    command += "&__sign=" + NetworkUtil.Sign(command, this.httpSecretKey);
-                }
-            }
-            return command;
         }
 
         /// <summary>
@@ -187,73 +167,47 @@ namespace GGFramework.GGNetwork
         /// <param name="paramObject"></param>
         /// <param name="exceptionAction">应用层定义不同的请求接口，根据消息类型（游戏消息、内购消息、流程消息、帐号消息）来决定异常响应类型。</param>
         /// <param name="callback"></param>
-        public HTTPRequest PostWebRequest(string httpAddress, string command, JsonObject paramObject, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public GGHTTPRequest PostWebRequest(string httpAddress, string command, JsonObject paramObject, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             Debug.Assert(httpAddress != null && paramObject != null, "Illegal parameters!!!");
             PreProcessParam(paramObject);
             return PostWebRequest(httpAddress, command, paramObject.ToString(), "application/json; charset=UTF-8", null, exceptionAction, callback);
         }
 
-        public HTTPRequest PostWebRequest(string httpAddress, string command, string paramString, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public GGHTTPRequest PostWebRequest(string httpAddress, string command, string paramString, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             return PostWebRequest(httpAddress, command, paramString, "application/x-www-form-urlencoded; charset=UTF-8", null, exceptionAction, callback);
         }
 
-        public HTTPRequest PostWebRequest(string httpAddress, string command, WWWForm form, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public GGHTTPRequest PostWebRequest(string httpAddress, string command, WWWForm form, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             return PostWebRequest(httpAddress, command, "", "application/x-www-form-urlencoded; charset=UTF-8", new BestHTTP.Forms.UnityForm(form), exceptionAction, callback);
         }
 
-        private HTTPRequest PostWebRequest(string httpAddress, string command, string paramString, string contentType, BestHTTP.Forms.HTTPFormBase form = null, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        private GGHTTPRequest PostWebRequest(string httpAddress, string command, string paramString, string contentType, BestHTTP.Forms.HTTPFormBase form = null, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             if (httpAddress == null)
             {
-                Debug.LogWarning("http address is null!!!command-" + command);
-                return null;
+                throw new Exception("Illegal null http address!!!");
             }
             Debug.Assert(paramString != null, "Illegal parameters!!!");
             Uri baseUri = new Uri(httpAddress);
             //Debug.Log("ready to request:" + baseUri.ToString());
 
-            //Debug.Log("++++>执行http线程");
-            byte[] byteArray = Encoding.UTF8.GetBytes(paramString);
-            HTTPRequest postRequest = new HTTPRequest(new Uri(baseUri, command));
-            //TODO: 这个时间设定是给普通的post、get消息请求的。对于下载请求，需要另外设置超时。
-            postRequest.ConnectTimeout = TimeSpan.FromSeconds(ServiceCenter.HttpConnectTimeout);
-            postRequest.Timeout = TimeSpan.FromSeconds(ServiceCenter.HttpRequestTimeout);
-            postRequest.MethodType = HTTPMethods.Post;
-            postRequest.AddHeader("Content-Type", contentType);
-            postRequest.AddHeader("Content-Length", byteArray.Length.ToString());
-            if (HttpNetworkSystem.Token != null)
-            {
-                postRequest.AddHeader("Authorization", "Bearer " + HttpNetworkSystem.Token);
-            }
+            GGHTTPRequest postRequest = GGHTTPRequest.CreatePostRequest(
+                new Uri(baseUri, command),
+                paramString,
+                contentType,
+                form,
+                exceptionAction,
+                callback
+                );
 
-            if (this.deviceUID != null)
-            {
-                postRequest.AddHeader("x-deviceId", this.deviceUID);
-            }
-            if (this.channel != null)
-            {
-                postRequest.AddHeader("x-channel", this.channel);
-            }
-            if (this.clientVersion != null)
-            {
-                postRequest.AddHeader("x-version", this.clientVersion);
-            }
-            if (form != null)
-            {
-                postRequest.SetForm(form);
-            }
-            postRequest.RawData = byteArray;
-            postRequest.Callback = (HTTPRequest originalRequest, HTTPResponse response) => {
-                OnRequestFinished(originalRequest, response, exceptionAction, callback);
-            };
             DoSendRequest(postRequest);
             return postRequest;
         }
 
-        public HTTPRequest GetWebRequest(string httpAddress, string command, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public GGHTTPRequest GetWebRequest(string httpAddress, string command, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             if (httpAddress == null)
             {
@@ -261,31 +215,18 @@ namespace GGFramework.GGNetwork
             }
             command = PreProcessParam(command);
             GameDebugger.sPushLog(string.Format("url:{0} - command:{1}", httpAddress, command));
-            Uri baseUri = new Uri(httpAddress);
-            Debug.Log("Http get: base Uri->"+ baseUri.ToString());
 
-            HTTPRequest postRequest = new HTTPRequest(new Uri(baseUri, command));
-            postRequest.ConnectTimeout = TimeSpan.FromSeconds(ServiceCenter.HttpConnectTimeout);
-            postRequest.Timeout = TimeSpan.FromSeconds(ServiceCenter.HttpRequestTimeout);
-            postRequest.MethodType = HTTPMethods.Get;
-            if (HttpNetworkSystem.Token != null)
-            {
-                postRequest.AddHeader("Authorization", "Bearer " + HttpNetworkSystem.Token);
-            }
-            if (this.deviceUID != null) {
-                postRequest.AddHeader("x-deviceId", this.deviceUID);
-            }
-            if (this.channel != null) {
-                postRequest.AddHeader("x-channel", this.channel);
-            }
-            if (this.clientVersion != null) {
-                postRequest.AddHeader("x-version", this.clientVersion);
-            }
-            postRequest.Callback = (HTTPRequest originalRequest, HTTPResponse response) => {
-                OnRequestFinished(originalRequest, response, exceptionAction, callback);
-            };
-            DoSendRequest(postRequest);
-            return postRequest;
+            Uri baseUri = new Uri(httpAddress);
+            Debug.Log("Http get: base Uri->" + baseUri.ToString());
+
+            GGHTTPRequest request = GGHTTPRequest.CreateGetRequest(
+                new Uri(baseUri, command),
+                exceptionAction,
+                callback
+                );
+
+            DoSendRequest(request);
+            return request;
         }
 
         private void TriggerResponseError(int statusCode)
@@ -300,15 +241,27 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void OnExceptionHandler(HTTPRequest originalRequest, string message, ExceptionAction exceptionAction)
+        private void OnExceptionHandler(GGHTTPRequest originalRequest, string message, ExceptionAction exceptionAction)
         {
-            if (exceptionAction == ExceptionAction.AutoRetry || exceptionAction == ExceptionAction.ConfirmRetry)
-            {
-                string serviceType = originalRequest.GetServiceType();
-                ServiceCenter.Instance.RefereshServiceHost(serviceType, (string type, string host)=> {
-                    SetServiceUrl(type, host);
-                });
-            }
+            //TODO: 可以考虑出错以后更改线路，以后再实现。
+            //if (exceptionAction == ExceptionAction.AutoRetry || exceptionAction == ExceptionAction.ConfirmRetry)
+            //{
+            //    string host = originalRequest.request.Uri.ToString();
+            //    ServiceCenter.Instance.HTTPDNS.parseIP(host, (string ip, HTTPDNS.EStatus status)=> {
+            //        if (status == HTTPDNS.EStatus.RET_SUCCESS)
+            //        {
+            //            Uri uri = new Uri(ip);
+            //            //originalRequest = new HTTPRequest(uri);
+            //        }
+            //        else {
+            //            message = string.Format("Can not parse URL({0})!", host);
+            //        }
+            //    });
+            //    //string serviceType = originalRequest.GetServiceType();
+            //    //ServiceCenter.Instance.RefereshServiceHost(serviceType, (string type, string host)=> {
+            //    //    SetServiceUrl(type, host);
+            //    //});
+            //}
             switch (exceptionAction)
             {
                 case ExceptionAction.AutoRetry:
@@ -327,7 +280,7 @@ namespace GGFramework.GGNetwork
                 case ExceptionAction.Tips:
                     uiAdaptor.ShowDialog("server_error", message, false, (bool retry) => {
                         //TODO: 通过uiAdaptor.ShowInfo(Type[tip/dialog])来展示信息。
-                        Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.Uri.ToString());
+                        Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.request.Uri.ToString());
                     });
                     break;
                 default:
@@ -341,10 +294,10 @@ namespace GGFramework.GGNetwork
         /// <param name="originalRequest"></param>
         /// <param name="response"></param>
         /// <param name="callback"></param>
-        public void OnRequestFinished(HTTPRequest originalRequest, HTTPResponse response, ExceptionAction exceptionAction, Action<JsonObject> callback)
+        public void OnRequestFinished(GGHTTPRequest originalRequest, GGHTTPResponse response, ExceptionAction exceptionAction, Action<JsonObject> callback)
         {
             //Debug.LogFormat("<=thread id:{0}", Thread.CurrentThread.ManagedThreadId);
-            Debug.Log("originalRequest.State:" + originalRequest.State.ToString());
+            Debug.Log("originalRequest.State:" + originalRequest.request.State.ToString());
             //string serviceType = originalRequest.GetServiceType();
             //Debug.LogFormat(">>>>>>>>>>>>>>>>>请求返回, service type:{0}：", serviceType);
             uiAdaptor.ShowWaiting(false);
@@ -355,14 +308,14 @@ namespace GGFramework.GGNetwork
             //    OnExceptionHandler(originalRequest, string.Format("Http response is null!Fix it on server side!"), ExceptionAction.ConfirmRetry);
             //    return;
             //}
-            switch (originalRequest.State)
+            switch (originalRequest.request.State)
             {
                 // The request finished without any problem.
-                case HTTPRequestStates.Finished:
-                    if (response.IsSuccess)
+                case BestHTTP.HTTPRequestStates.Finished:
+                    if (response.response.IsSuccess)
                     {
-                        Debug.Log("http response:" + response.DataAsText.ToString());
-                        Debug.Log("http response status:" + response.StatusCode.ToString());
+                        Debug.Log("http response:" + response.response.DataAsText.ToString());
+                        Debug.Log("http response status:" + response.response.StatusCode.ToString());
                         //Debug.Log("http response data:" + response.DataAsText);
                         if (callback != null)
                         {
@@ -374,7 +327,7 @@ namespace GGFramework.GGNetwork
                                 string message = null;
                                 if (this.ParamType == EParamType.Json)
                                 {
-                                    responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(response.DataAsText);
+                                    responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(response.response.DataAsText);
                                     if (responseObj.ContainsKey("code"))
                                     {
                                         code = Convert.ToInt32(responseObj["code"]);
@@ -390,7 +343,7 @@ namespace GGFramework.GGNetwork
                                 }
                                 else if (this.ParamType == EParamType.Text) {
                                     responseObj = new JsonObject();
-                                    responseObj["response"] = response.DataAsText;
+                                    responseObj["response"] = response.response.DataAsText;
                                 }
 
                             }
@@ -412,13 +365,13 @@ namespace GGFramework.GGNetwork
                     else
                     {
                         Debug.LogWarning(string.Format("Request finished Successfully, but the server sent an error. Status Code: {0}-{1} Message: {2}",
-                                                        response.StatusCode,
-                                                        response.Message,
-                                                        response.DataAsText));
-                        if (response.StatusCode != NetworkConst.CODE_OK)
+                                                        response.response.StatusCode,
+                                                        response.response.Message,
+                                                        response.response.DataAsText));
+                        if (response.response.StatusCode != NetworkConst.CODE_OK)
                         {
-                            TriggerResponseError(response.StatusCode);
-                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.ConfirmRetry);
+                            TriggerResponseError(response.response.StatusCode);
+                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.response.StatusCode.ToString(), response.response.Message, response.response.DataAsText), ExceptionAction.ConfirmRetry);
                             return;
                         }
                         //OnExceptionHandler(originalRequest, TextSystem.GetText("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.Tips);
@@ -427,19 +380,19 @@ namespace GGFramework.GGNetwork
                     break;
 
                 // The request finished with an unexpected error. The request's Exception property may contain more info about the error.
-                case HTTPRequestStates.Error:
-                    Debug.LogError("Request Finished with Error! " + (originalRequest.Exception != null ? (originalRequest.Exception.Message + "\n" + originalRequest.Exception.StackTrace) : "No Exception"));
+                case BestHTTP.HTTPRequestStates.Error:
+                    Debug.LogError("Request Finished with Error! " + (originalRequest.request.Exception != null ? (originalRequest.request.Exception.Message + "\n" + originalRequest.request.Exception.StackTrace) : "No Exception"));
                     OnExceptionHandler(originalRequest, "Connection Timed Out!", exceptionAction);
                     break;
 
                 // The request aborted, initiated by the user.
-                case HTTPRequestStates.Aborted:
+                case BestHTTP.HTTPRequestStates.Aborted:
                     //TODO:GL
                     Debug.LogWarning("Request Aborted!");
                     break;
 
                 // Connecting to the server is timed out.
-                case HTTPRequestStates.ConnectionTimedOut:
+                case BestHTTP.HTTPRequestStates.ConnectionTimedOut:
                     Debug.LogError("Connection Timed Out!");
                     if (exceptionAction == ExceptionAction.AutoRetry)
                     {
@@ -449,7 +402,7 @@ namespace GGFramework.GGNetwork
                     break;
 
                 // The request didn't finished in the given time.
-                case HTTPRequestStates.TimedOut:
+                case BestHTTP.HTTPRequestStates.TimedOut:
                     Debug.LogError("Processing the request Timed Out!");
                     if (exceptionAction == ExceptionAction.AutoRetry)
                     {
@@ -467,8 +420,8 @@ namespace GGFramework.GGNetwork
             {
                 throw new Exception(string.Format("Illegal service URL!!!service:{0}", service));
             }
-            HTTPRequest request = PostWebRequest(url, command, jsonParams, exceptionAction, callback);
-            request.SetServiceType(service);
+            GGHTTPRequest request = PostWebRequest(url, command, jsonParams, exceptionAction, callback);
+            //request.SetServiceType(service);
         }
 
         /// <summary>
@@ -557,6 +510,31 @@ namespace GGFramework.GGNetwork
                     }
                 }
             }
+        }
+
+        private void PreProcessParam(JsonObject paramObject)
+        {
+            if (this.EnablePreProcessParam)
+            {
+                paramObject["__timestamp"] = NetworkUtil.GetTimeStamp();
+                paramObject["__sign"] = NetworkUtil.Sign(paramObject, NetworkConst.httpSecretKey);
+            }
+        }
+
+        private string PreProcessParam(string command)
+        {
+            if (this.EnablePreProcessParam)
+            {
+                if (!string.IsNullOrEmpty(command))
+                {
+                    command += "&__timestamp=" + NetworkUtil.GetTimeStamp().ToString();
+                }
+                if (!string.IsNullOrEmpty(NetworkConst.httpSecretKey))
+                {
+                    command += "&__sign=" + NetworkUtil.Sign(command, NetworkConst.httpSecretKey);
+                }
+            }
+            return command;
         }
 
         /// <summary>

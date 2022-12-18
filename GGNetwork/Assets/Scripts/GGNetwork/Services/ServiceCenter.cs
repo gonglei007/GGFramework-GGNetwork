@@ -10,14 +10,23 @@ namespace GGFramework.GGNetwork
     /// </summary>
     public class ServiceCenter : Singleton<ServiceCenter>
     {
+        //TODO: 后面可以做到配置中，从Init传进来。
+        public const string HTTP_DNS_HOST = "http://s3.baecdn.com/v1/dns/query";
         //TODO: GL - 从服务端获取、更新此参数
         public static int HttpConnectTimeout = 8;
         public static int HttpRequestTimeout = 10;
 
         private string serviceCenterUrl = null;     // 服务中心的地址。
+        private HTTPDNS httpDNS = new HTTPDNS();
+        public HTTPDNS HTTPDNS {
+            get {
+                return httpDNS;
+            }
+        }
 
         public void Init(string serviceCenterUrl = null) {
             this.serviceCenterUrl = serviceCenterUrl;
+            httpDNS.Init(HTTP_DNS_HOST);
         }
 
         /// <summary>
@@ -49,6 +58,5 @@ namespace GGFramework.GGNetwork
                 }
             });
         }
-
     }
 }
