@@ -69,7 +69,7 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        public bool enablePreProcessParam = false;    // 是否开启参数预处理，如果开启，会在参数前加入签名等。这就需要服务端支持。
+        private bool enablePreProcessParam = false;    // 是否开启参数预处理，如果开启，会在参数前加入签名等。这就需要服务端支持。
         public bool EnablePreProcessParam
         {
             set
@@ -82,6 +82,18 @@ namespace GGFramework.GGNetwork
             }
         }
 
+        private bool enableHttpDNS = false;     // 是否开启Http DNS，如果开启，请求网络的时候，先把host变成ip（缓存起来），再请求。
+        public bool EnableHttpDNS
+        {
+            set
+            {
+                enableHttpDNS = true;
+            }
+            get
+            {
+                return enableHttpDNS;
+            }
+        }
 
         public void Awake()
         {
@@ -191,6 +203,9 @@ namespace GGFramework.GGNetwork
                 throw new Exception("Illegal null http address!!!");
             }
             Debug.Assert(paramString != null, "Illegal parameters!!!");
+            if (this.enableHttpDNS) {
+                httpAddress = ServiceCenter.Instance.HTTPDNS.GetURLByIP(httpAddress);
+            }
             Uri baseUri = new Uri(httpAddress);
             //Debug.Log("ready to request:" + baseUri.ToString());
 
@@ -212,6 +227,10 @@ namespace GGFramework.GGNetwork
             if (httpAddress == null)
             {
                 throw new Exception("Illegal null http address!!!");
+            }
+            if (this.enableHttpDNS)
+            {
+                httpAddress = ServiceCenter.Instance.HTTPDNS.GetURLByIP(httpAddress);
             }
             command = PreProcessParam(command);
             GameDebugger.sPushLog(string.Format("url:{0} - command:{1}", httpAddress, command));
@@ -321,6 +340,15 @@ namespace GGFramework.GGNetwork
                         Debug.Log("http response:" + response.response.DataAsText.ToString());
                         Debug.Log("http response status:" + response.response.StatusCode.ToString());
                         //Debug.Log("http response data:" + response.DataAsText);
+
+                        if (response.response.StatusCode != NetworkConst.CODE_OK)
+                        {
+                            string errorMessage = string.Format("Server side error-[{0}]", response.response.StatusCode);
+                            Debug.LogError(errorMessage);
+                            //originalRequest.request.Reset();
+                            OnExceptionHandler(originalRequest, errorMessage, exceptionAction);
+                            break;
+                        }
                         if (callback != null)
                         {
                             //Debug.LogFormat("==:thread id:{0}", Thread.CurrentThread.ManagedThreadId);
@@ -354,6 +382,8 @@ namespace GGFramework.GGNetwork
                             catch (Exception e)
                             {
                                 // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
+                                string errorDetail = string.Format("Response message parse error!-{0}", response.response.DataAsText);
+                                Debug.LogError(errorDetail);
                                 OnExceptionHandler(originalRequest, string.Format("[{0}]ask-server-developer-to-fix. {1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), ExceptionAction.ConfirmRetry);
                             }
                             finally

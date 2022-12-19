@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using SimpleJson;
 using UnityEngine;
 
@@ -19,8 +21,28 @@ namespace GGFramework.GGNetwork
 
         private string apiHost = "";
 
+        private Dictionary<string, string> hostMap = new Dictionary<string, string>();
+
         public void Init(string apiHost) {
             this.apiHost = apiHost;
+            hostMap.Clear();
+        }
+
+        /// <summary>
+        /// 如果有IP缓存，就把url的host转成ip返回。
+        /// 如果没有IP缓存，就直接返回原url。
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public string GetURLByIP(string url) {
+            string newUrl = url;
+            Uri uri = new Uri(url);
+            if (hostMap.ContainsKey(uri.Host)) {
+                string ip = hostMap[uri.Host];
+                var regex = new Regex(Regex.Escape(uri.Host));
+                newUrl = regex.Replace(url, ip, 1);
+            }
+            return newUrl;
         }
 
         /// <summary>
@@ -28,17 +50,18 @@ namespace GGFramework.GGNetwork
         /// </summary>
         /// <param name="url"></param>
         /// <param name="callback"></param>
-        public void TranslateURL(string url, Action<string, EStatus> callback) {
+        public void TranslateURL(string url, Action<string, EStatus, string> callback) {
             //从url获取域名。
             Uri uri = new Uri(url);
-            ParseHost(uri.Host, (string ip, EStatus status) => {
+            ParseHost(uri.Host, (string ip, EStatus status, string message) => {
                 if (status == EStatus.RET_SUCCESS)
                 {
-                    string newURL = url.Replace(uri.Host, ip);
-                    callback(newURL, status);
+                    var regex = new Regex(Regex.Escape(uri.Host));
+                    string newUrl = regex.Replace(url, ip, 1);
+                    callback(newUrl, status, message);
                 }
                 else {
-                    callback(url, status);
+                    callback(url, status, message);
                 }
             });
         }
@@ -51,11 +74,13 @@ namespace GGFramework.GGNetwork
         /// </summary>
         /// <param name="domain"></param>
         /// <param name="callback"></param>
-        public void ParseHost(string domain, Action<string, EStatus> callback) {
+        public void ParseHost(string domain, Action<string, EStatus, string> callback) {
             string ip = "0.0.0.0";
+            string message = "ERROR";
             if (string.IsNullOrEmpty(this.apiHost)) {
-                Debug.LogWarning("Not set http-dns host yet!");
-                callback(ip, EStatus.RET_NO_HOST);
+                message = "Not set http-dns host yet!";
+                Debug.LogWarning(message);
+                callback(ip, EStatus.RET_NO_HOST, message);
                 return;
             }
             //JsonObject param = new JsonObject();
@@ -63,20 +88,35 @@ namespace GGFramework.GGNetwork
             HttpNetworkSystem.Instance.GetWebRequest(this.apiHost, "?domain="+domain, HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response)=> {
                 if (response == null)
                 {
-                    //TODO
-                    Debug.LogErrorFormat("Request http dns failed!-{0}", response.ToString());
-                    callback(ip, EStatus.RET_ERROR_RESULT);
+                    message = string.Format("Request http dns failed!-{0}", response.ToString());
+                    Debug.LogError(message);
+                    callback(ip, EStatus.RET_ERROR_RESULT, message);
                 }
                 else {
+                    if (!response.ContainsKey("code")) {
+                        message = string.Format("Host responses wrong message format:{0}", response.ToString());
+                        Debug.LogError(message);
+                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        return;
+                    }
+                    string code = response["code"].ToString();
+                    if (!code.Equals("200")) {
+                        message = string.Format("HTTP DNS failed!CODE:{0}", code);
+                        Debug.LogError(message);
+                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        return;
+                    }
                     if (!response.ContainsKey("ipv4")) {
-                        Debug.LogErrorFormat("Host responses wrong message:{0}", response.ToString());
-                        callback(null, EStatus.RET_ERROR_RESULT);
+                        message = string.Format("HTTP DNS server response error(not found ipv4)!");
+                        Debug.LogError(message);
+                        callback(null, EStatus.RET_ERROR_RESULT, message);
                         return;
                     }
                     string ip = null;
                     ip = response["ipv4"].ToString();
                     Debug.LogFormat("Response result:{0}", response.ToString());
-                    callback(ip, EStatus.RET_SUCCESS);
+                    hostMap[domain] = ip;
+                    callback(ip, EStatus.RET_SUCCESS, message);
                 }
             });
         }
