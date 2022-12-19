@@ -219,7 +219,7 @@ namespace GGFramework.GGNetwork
         public void Dispose()
         {
             return;
-            CloseAll();
+            //CloseAll();
         }
     }
 }

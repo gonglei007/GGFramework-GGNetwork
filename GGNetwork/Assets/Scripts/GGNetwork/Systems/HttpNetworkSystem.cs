@@ -385,8 +385,9 @@ namespace GGFramework.GGNetwork
 
                 // The request finished with an unexpected error. The request's Exception property may contain more info about the error.
                 case BestHTTP.HTTPRequestStates.Error:
+                    string ExceptionMessage = originalRequest.request.Exception != null ? originalRequest.request.Exception.Message : "No Exception";
                     Debug.LogError("Request Finished with Error! " + (originalRequest.request.Exception != null ? (originalRequest.request.Exception.Message + "\n" + originalRequest.request.Exception.StackTrace) : "No Exception"));
-                    OnExceptionHandler(originalRequest, "Connection Timed Out!", exceptionAction);
+                    OnExceptionHandler(originalRequest, ExceptionMessage, exceptionAction);
                     break;
 
                 // The request aborted, initiated by the user.
