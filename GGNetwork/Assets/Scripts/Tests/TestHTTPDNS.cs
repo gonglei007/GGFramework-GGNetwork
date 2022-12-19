@@ -12,34 +12,33 @@ public class TestHTTPDNS// : MonoBehaviour
     const string DOMAIN_DATA = "";
     const string DOMAIN_GAME = "";
     const string URL_WEB = "http://global.gotechgames.com:4210/slgLogin";
+    const string URL_WEB1 = "http://43.245.49.164:4210/slgLogin";
     const string URL_DATA = "";
     const string URL_GAME = "";
 
     [SetUp]
-    public void Start() {
+    public IEnumerator Start() {
         Debug.Log("Test started!");
         GameNetworkSystem.Instance.Init();
         httpDNS.Init("http://103.150.251.71/v1/dns/query");
-    }
-
-    // A Test behaves as an ordinary method
-    [UnityTest]
-    public IEnumerator Test_TranslateURL()
-    {
-        // Use the Assert class to test conditions
-        httpDNS.TranslateURL(URL_WEB, (string newURL, HTTPDNS.EStatus status) => {
-            //Assert.That(false, "Error!");
-            Debug.LogFormat("newUrl:{0}-status:{1}", newURL, status.ToString());
-        });
         yield return null;
     }
 
-    [UnityTest]
+    // A Test behaves as an ordinary method
+    [Test, Order(2)]
+    public void Test_GetURLByIP()
+    {
+        // Use the Assert class to test conditions
+        string newUrl = httpDNS.GetURLByIP(URL_WEB);
+        Assert.That(newUrl.Equals(URL_WEB1), "new ip is right!");
+    }
+
+    [UnityTest, Order(1)]
     public IEnumerator Test_ParseHost() {
         bool isFinished = false;
-        httpDNS.ParseHost(DOMAIN_WEB, (string ip, HTTPDNS.EStatus status) => {
+        httpDNS.ParseHost(DOMAIN_WEB, (string ip, HTTPDNS.EStatus status, string message) => {
             //Assert.That(false, "Error!");
-            Debug.LogWarningFormat("ip:{0}-status:{1}", ip, status.ToString());
+            Debug.LogWarningFormat("ip:{0}-status:{1}-{2}", ip, status.ToString(), message);
             isFinished = true;
             Assert.That(string.IsNullOrEmpty(ip), "Wrong ip result!");
             Assert.That(status == HTTPDNS.EStatus.RET_SUCCESS, "status must be RET_SUCCESS!");
@@ -49,15 +48,5 @@ public class TestHTTPDNS// : MonoBehaviour
             //Debug.LogFormat("request finished?-{0}", isFinished);
             return !isFinished;
         });
-    }
-
-    // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
-    // `yield return null;` to skip a frame.
-    [UnityTest]
-    public IEnumerator NewTestScriptWithEnumeratorPasses()
-    {
-        // Use the Assert class to test conditions.
-        // Use yield to skip a frame.
-        yield return null;
     }
 }
