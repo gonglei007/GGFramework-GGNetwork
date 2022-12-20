@@ -3,7 +3,8 @@
     "rootNamespace": "GGFramework",
     "references": [
         "GUID:6ba7e54402fd247638281fb939d182eb",
-        "GUID:9e197e24bc8924240a47afdd719177ae"
+        "GUID:9e197e24bc8924240a47afdd719177ae",
+        "GUID:3ce0cf2654ad3464aa58eb2e27f77f0d"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
