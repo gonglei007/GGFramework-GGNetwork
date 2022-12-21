@@ -135,7 +135,7 @@ namespace GGFramework.GGNetwork
         /// <param name="callback"></param>
         public void ParseHosts(string[] domains, Action<JsonArray, EStatus, string> callback)
         {
-            JsonArray ips = null;
+            JsonArray ips = new JsonArray();
             string message = "ERROR";
             if (string.IsNullOrEmpty(this.apiHost))
             {
@@ -166,7 +166,7 @@ namespace GGFramework.GGNetwork
                     {
                         message = string.Format("Host responses wrong message format:{0}", response.ToString());
                         Debug.LogError(message);
-                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        callback(ips, EStatus.RET_ERROR_RESULT, message);
                         return;
                     }
                     string code = response["code"].ToString();
@@ -174,14 +174,14 @@ namespace GGFramework.GGNetwork
                     {
                         message = string.Format("HTTP DNS failed!CODE:{0}", code);
                         Debug.LogError(message);
-                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        callback(ips, EStatus.RET_ERROR_RESULT, message);
                         return;
                     }
                     if (!response.ContainsKey("ipv4"))
                     {
                         message = string.Format("HTTP DNS server response error(not found ipv4)!");
                         Debug.LogError(message);
-                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        callback(ips, EStatus.RET_ERROR_RESULT, message);
                         return;
                     }
                     ips = response["ipv4"] as JsonArray;

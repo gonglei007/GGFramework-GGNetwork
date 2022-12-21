@@ -90,14 +90,14 @@ namespace GGFramework.GGNetwork
 
         public void Update()
         {
-            if (m_DownLoads.Count > 0)
-            {
-                if (!DownlaodFile._Instance.IsDownLoadLimit)
-                {
-                    RequestItem item = m_DownLoads.Dequeue();
-                    DownlaodFile._Instance.StartDownLoad(item.Url, item.SavePath, item.Progress, item.Total, item.Complete);
-                }
-            }
+            //if (m_DownLoads.Count > 0)
+            //{
+            //    if (!DownlaodFile._Instance.IsDownLoadLimit)
+            //    {
+            //        RequestItem item = m_DownLoads.Dequeue();
+            //        DownlaodFile._Instance.StartDownLoad(item.Url, item.SavePath, item.Progress, item.Total, item.Complete);
+            //    }
+            //}
             if (callbackQueue.Count > 0)
             {
                 callbackQueue.Dequeue().DoCallback();
@@ -153,7 +153,7 @@ namespace GGFramework.GGNetwork
         /// </summary>
         public void ClearDownLoad()
         {
-            DownlaodFile._Instance.ClearData();
+            //DownlaodFile._Instance.ClearData();
         }
 
         private IEnumerator DelayDownload(BestHTTP.HTTPRequest request, float delay)

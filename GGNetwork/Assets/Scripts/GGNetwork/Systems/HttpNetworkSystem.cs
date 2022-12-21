@@ -357,8 +357,12 @@ namespace GGFramework.GGNetwork
                 case BestHTTP.HTTPRequestStates.Finished:
                     if (response.response.IsSuccess)
                     {
-                        Debug.Log("http response:" + response.response.DataAsText.ToString());
-                        Debug.Log("http response status:" + response.response.StatusCode.ToString());
+                        Debug.LogFormat("({0}) Request. \n Response:\nstatus{1}\ndata:{2}",
+                            originalRequest.request.CurrentUri.ToString(),
+                            response.response.StatusCode.ToString(),
+                            response.response.DataAsText.ToString());
+                        //Debug.Log("http response:" + response.response.DataAsText.ToString());
+                        //Debug.Log("http response status:" + response.response.StatusCode.ToString());
                         //Debug.Log("http response data:" + response.DataAsText);
 
                         if (response.response.StatusCode != NetworkConst.CODE_OK)
@@ -384,7 +388,7 @@ namespace GGFramework.GGNetwork
                                     {
                                         code = Convert.ToInt32(responseObj["code"]);
                                     }
-                                    if (code != NetworkConst.CODE_OK)
+                                    if (code != NetworkConst.CODE_OK && (exceptionAction != ExceptionAction.Ignore && exceptionAction != ExceptionAction.Silence))
                                     {
                                         message = responseObj["msg"].ToString();
                                         uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) =>
