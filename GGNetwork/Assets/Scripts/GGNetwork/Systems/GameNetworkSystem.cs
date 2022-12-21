@@ -15,6 +15,7 @@ namespace GGFramework.GGNetwork
             HttpNetworkSystem.Instance.Init();
             NetworkSystem.Instance.Init();
             ServiceCenter.Instance.Init();
+            NetworkRecorder.Instance.Init();
         }
     }
 }

@@ -42,7 +42,8 @@ namespace GGFramework.GGNetwork
         }
 
         protected bool IsClientConnected() {
-            return client.NetworkState is not ((Pomelo.DotNetClient.NetWorkState)NetWorkState.CONNECTED or (Pomelo.DotNetClient.NetWorkState)NetWorkState.CONNECTING);
+            bool connected = client.NetworkState != (Pomelo.DotNetClient.NetWorkState)NetWorkState.CONNECTED || client.NetworkState != (Pomelo.DotNetClient.NetWorkState)NetWorkState.CONNECTING;
+            return connected;
         }
 
         public virtual void Disconnect()
@@ -50,7 +51,8 @@ namespace GGFramework.GGNetwork
             base.Disconnect();
             if (IsClientConnected())
             {
-                client.disconnect();
+                //TODO: 这个Reason要有设计。
+                client.disconnect(DisconnectReason.GameLogicNeed);
             }
         }
 

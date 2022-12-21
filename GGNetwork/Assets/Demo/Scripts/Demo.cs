@@ -22,8 +22,10 @@ public class Demo : MonoBehaviour
                 // Do things on No
             });
         };
-        HttpNetworkSystem.Instance.LogAdaptor.onPostError = (string id, string info) => {
-            Debug.LogErrorFormat("Post error info to host. [{0}] | {1}", id, info);
+        HttpNetworkSystem.Instance.LogAdaptor.onPostNetworkError = (string host, JsonObject param) => {
+            string reportJson = SimpleJson.SimpleJson.SerializeObject(param);
+            Debug.LogErrorFormat("Post error info to host. [{0}] | {1}", host, reportJson);
+            EagleEye.TestNetwork(host, reportJson);
         };
     }
 

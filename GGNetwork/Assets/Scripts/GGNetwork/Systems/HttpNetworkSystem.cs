@@ -200,7 +200,13 @@ namespace GGFramework.GGNetwork
         {
             if (httpAddress == null)
             {
-                throw new Exception("Illegal null http address!!!");
+                if (exceptionAction != ExceptionAction.Ignore)
+                {
+                    throw new Exception("Illegal null http address!!!");
+                }
+                else {
+                    return null;
+                }
             }
             Debug.Assert(paramString != null, "Illegal parameters!!!");
             if (this.enableHttpDNS) {
@@ -226,7 +232,13 @@ namespace GGFramework.GGNetwork
         {
             if (httpAddress == null)
             {
-                throw new Exception("Illegal null http address!!!");
+                if (exceptionAction != ExceptionAction.Ignore)
+                {
+                    throw new Exception("Illegal null http address!!!");
+                }
+                else {
+                    return null;
+                }
             }
             if (this.enableHttpDNS)
             {
@@ -331,6 +343,14 @@ namespace GGFramework.GGNetwork
             //    OnExceptionHandler(originalRequest, string.Format("Http response is null!Fix it on server side!"), ExceptionAction.ConfirmRetry);
             //    return;
             //}
+			
+			JsonObject param = new JsonObject();
+			param["protocol"] = "http";
+			param["host"] = originalRequest.request.CurrentUri.Host;
+			param["port"] = originalRequest.request.CurrentUri.Port;
+			param["state"] = originalRequest.request.State.ToString();
+			param["uri"] = Uri.EscapeDataString(originalRequest.request.CurrentUri.ToString());
+			
             switch (originalRequest.request.State)
             {
                 // The request finished without any problem.
@@ -398,6 +418,10 @@ namespace GGFramework.GGNetwork
                     }
                     else
                     {
+						param["statusCode"] = response.response.StatusCode;
+						param["message"] = response.response.Message;
+						param["dataAsText"] = response.response.DataAsText;
+						logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
                         Debug.LogWarning(string.Format("Request finished Successfully, but the server sent an error. Status Code: {0}-{1} Message: {2}",
                                                         response.response.StatusCode,
                                                         response.response.Message,
@@ -417,6 +441,7 @@ namespace GGFramework.GGNetwork
                 case BestHTTP.HTTPRequestStates.Error:
                     string ExceptionMessage = originalRequest.request.Exception != null ? originalRequest.request.Exception.Message : "No Exception";
                     Debug.LogError("Request Finished with Error! " + (originalRequest.request.Exception != null ? (originalRequest.request.Exception.Message + "\n" + originalRequest.request.Exception.StackTrace) : "No Exception"));
+					logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
                     OnExceptionHandler(originalRequest, ExceptionMessage, exceptionAction);
                     break;
 
@@ -429,6 +454,7 @@ namespace GGFramework.GGNetwork
                 // Connecting to the server is timed out.
                 case BestHTTP.HTTPRequestStates.ConnectionTimedOut:
                     Debug.LogError("Connection Timed Out!");
+					logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
                     if (exceptionAction == ExceptionAction.AutoRetry)
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
@@ -439,6 +465,7 @@ namespace GGFramework.GGNetwork
                 // The request didn't finished in the given time.
                 case BestHTTP.HTTPRequestStates.TimedOut:
                     Debug.LogError("Processing the request Timed Out!");
+					logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
                     if (exceptionAction == ExceptionAction.AutoRetry)
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
