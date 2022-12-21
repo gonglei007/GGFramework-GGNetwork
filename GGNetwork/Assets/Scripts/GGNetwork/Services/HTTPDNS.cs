@@ -20,6 +20,11 @@ namespace GGFramework.GGNetwork
         };
 
         private string apiHost = "";
+        public string APIHost {
+            get {
+                return apiHost;
+            }
+        }
 
         private Dictionary<string, string> hostMap = new Dictionary<string, string>();
 
@@ -75,7 +80,7 @@ namespace GGFramework.GGNetwork
         /// <param name="domain"></param>
         /// <param name="callback"></param>
         public void ParseHost(string domain, Action<string, EStatus, string> callback) {
-            string ip = "0.0.0.0";
+            string ip = null;
             string message = "ERROR";
             if (string.IsNullOrEmpty(this.apiHost)) {
                 message = "Not set http-dns host yet!";
@@ -112,11 +117,78 @@ namespace GGFramework.GGNetwork
                         callback(null, EStatus.RET_ERROR_RESULT, message);
                         return;
                     }
-                    string ip = null;
                     ip = response["ipv4"].ToString();
                     Debug.LogFormat("Response result:{0}", response.ToString());
                     hostMap[domain] = ip;
                     callback(ip, EStatus.RET_SUCCESS, message);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 从远端HttpDNS请求解析，返回IP。
+        /// 先从本地缓存获取，如果缓存有，就用缓存的。
+        /// 如果缓存没有，就从远端api获取。
+        /// 如果获取失败，就不解析了。
+        /// </summary>
+        /// <param name="domains"></param>
+        /// <param name="callback"></param>
+        public void ParseHosts(string[] domains, Action<JsonArray, EStatus, string> callback)
+        {
+            JsonArray ips = null;
+            string message = "ERROR";
+            if (string.IsNullOrEmpty(this.apiHost))
+            {
+                message = "Not set http-dns host yet!";
+                Debug.LogWarning(message);
+                callback(ips, EStatus.RET_NO_HOST, message);
+                return;
+            }
+            //JsonObject param = new JsonObject();
+            //param["domain"] = domain;
+            // Temp set timeout to short time.
+            int preConnectTimeout = ServiceCenter.HttpConnectTimeout;
+            int preRequestTimeout = ServiceCenter.HttpRequestTimeout;
+            ServiceCenter.HttpConnectTimeout = 1;
+            ServiceCenter.HttpRequestTimeout = 1;
+            HttpNetworkSystem.Instance.GetWebRequest(this.apiHost, "?domains=" + domains.ToString(), HttpNetworkSystem.ExceptionAction.Silence, (JsonObject response) => {
+                ServiceCenter.HttpConnectTimeout = preConnectTimeout;
+                ServiceCenter.HttpRequestTimeout = preRequestTimeout;
+                if (response == null)
+                {
+                    message = string.Format("Request http dns failed!-{0}", response.ToString());
+                    Debug.LogError(message);
+                    callback(ips, EStatus.RET_ERROR_RESULT, message);
+                }
+                else
+                {
+                    if (!response.ContainsKey("code"))
+                    {
+                        message = string.Format("Host responses wrong message format:{0}", response.ToString());
+                        Debug.LogError(message);
+                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        return;
+                    }
+                    string code = response["code"].ToString();
+                    if (!code.Equals("200"))
+                    {
+                        message = string.Format("HTTP DNS failed!CODE:{0}", code);
+                        Debug.LogError(message);
+                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        return;
+                    }
+                    if (!response.ContainsKey("ipv4"))
+                    {
+                        message = string.Format("HTTP DNS server response error(not found ipv4)!");
+                        Debug.LogError(message);
+                        callback(null, EStatus.RET_ERROR_RESULT, message);
+                        return;
+                    }
+                    ips = response["ipv4"] as JsonArray;
+                    Debug.LogFormat("Response result:{0}", response.ToString());
+                    //TODO: 解析
+                    //hostMap[domain] = ips;
+                    callback(ips, EStatus.RET_SUCCESS, message);
                 }
             });
         }

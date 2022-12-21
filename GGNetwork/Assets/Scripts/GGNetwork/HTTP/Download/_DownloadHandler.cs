@@ -118,6 +118,46 @@ public class _DownloadHandler : DownloadHandlerScript
         return true;
     }
 
+    /// <summary>
+    /// 所有数据接收完成的回调，将临时文件保存为制定的文件名
+    /// </summary>
+    protected override void CompleteContent()
+    {
+		try
+		{
+			string CompleteFilePath = DirectoryPath + "/" + FileName;   //完整路径
+			string TempFilePath = fs.Name;   //临时文件路径
+			OnDispose();
+
+			if (File.Exists(TempFilePath))
+			{
+				if (File.Exists(CompleteFilePath))
+				{
+					File.Delete(CompleteFilePath);
+				}
+				if (TempFilePath.Contains(Global.TablePackageName))
+				{
+					CoroutineUtil.DoCoroutine(MoveArchieveZipFile(TempFilePath, CompleteFilePath));
+					return;
+				}
+				else
+				{
+					File.Move(TempFilePath, CompleteFilePath);
+				}
+			}
+			else
+			{
+				Debug.Log("生成文件失败=>下载的文件不存在！");
+			}
+			if (_eventComplete != null)
+				_eventComplete.Invoke(CompleteFilePath);
+		}
+		catch (Exception e)
+		{
+			//NetworkSystem.Instance.PostErrorLogToServer("DownloadHandler CompleteContent exception: " + e.Message, "");
+		}
+    }
+
 	public IEnumerator MoveArchieveZipFile(string TempFilePath, string CompleteFilePath)
 	{
 		yield return new WaitForSeconds(0.2f);

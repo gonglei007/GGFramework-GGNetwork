@@ -6,7 +6,7 @@ namespace GGFramework.GGNetwork
      */
     public interface INetworkCallback
     {
-        public virtual void Call(string response) { }
-        public virtual void Call(string module, string func, string response) { }
+        void Call(string response);
+        void Call(string module, string func, string response);
     }
 }

@@ -7,6 +7,10 @@ namespace GGFramework.GGNetwork
     {
         public void Call(string response) {
         }
+
+        public void Call(string module, string func, string response) {
+        }
     }
+
 }
 
