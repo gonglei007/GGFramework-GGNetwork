@@ -15,6 +15,7 @@ namespace GGFramework.GGNetwork
     {
         public enum EStatus {
             RET_SUCCESS = 1000,
+            RET_NO_ON,
             RET_NO_HOST,
             RET_ERROR_RESULT,
         };
@@ -27,10 +28,12 @@ namespace GGFramework.GGNetwork
         }
 
         private Dictionary<string, string> hostMap = new Dictionary<string, string>();
+        private bool on = false;    // 是否开启。
 
         public void Init(string apiHost) {
             this.apiHost = apiHost;
             hostMap.Clear();
+            this.on = true;
         }
 
         /// <summary>
@@ -40,6 +43,9 @@ namespace GGFramework.GGNetwork
         /// <param name="url"></param>
         /// <returns></returns>
         public string GetURLByIP(string url) {
+            if (!this.on) {
+                return url;
+            }
             string newUrl = url;
             Uri uri = new Uri(url);
             if (hostMap.ContainsKey(uri.Host)) {
@@ -56,6 +62,11 @@ namespace GGFramework.GGNetwork
         /// <param name="url"></param>
         /// <param name="callback"></param>
         public void TranslateURL(string url, Action<string, EStatus, string> callback) {
+            if (!this.on)
+            {
+                callback(url, EStatus.RET_SUCCESS, "HTTP DNS is not on.");
+                return;
+            }
             //从url获取域名。
             Uri uri = new Uri(url);
             ParseHost(uri.Host, (string ip, EStatus status, string message) => {
@@ -80,6 +91,11 @@ namespace GGFramework.GGNetwork
         /// <param name="domain"></param>
         /// <param name="callback"></param>
         public void ParseHost(string domain, Action<string, EStatus, string> callback) {
+            if (!this.on)
+            {
+                callback(null, EStatus.RET_SUCCESS, "HTTP DNS is not on!");
+                return;
+            }
             string ip = null;
             string message = "ERROR";
             if (string.IsNullOrEmpty(this.apiHost)) {
@@ -136,6 +152,11 @@ namespace GGFramework.GGNetwork
         public void ParseHosts(string[] domains, Action<JsonArray, EStatus, string> callback)
         {
             JsonArray ips = new JsonArray();
+            if (!this.on)
+            {
+                callback(ips, EStatus.RET_SUCCESS, "HTTP DNS is not on!");
+                return;
+            }
             string message = "ERROR";
             if (string.IsNullOrEmpty(this.apiHost))
             {

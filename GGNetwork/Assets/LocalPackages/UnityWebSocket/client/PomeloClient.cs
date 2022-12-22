@@ -33,9 +33,21 @@ namespace Pomelo.DotNetClient
         ERROR
     }
 
+    public enum DisconnectReason
+    {
+        ManuallyClose,
+        Test,
+        PkgKick,
+        HeatbeatBroken,
+        GameLogicNeed,
+        GameLogicKicked,
+        NetworkBroken,
+        BreakBeforeReConnect,
+    }
+
     public class PomeloClient : IDisposable
     {
-		public const string EVENT_DISCONNECT = "disconnect";
+        public const string EVENT_DISCONNECT = "disconnect";
         /// <summary>
         /// netwrok changed event
         /// </summary>
@@ -43,6 +55,12 @@ namespace Pomelo.DotNetClient
 
 
         private NetWorkState netWorkState = NetWorkState.CLOSED;   //current network state
+        private DisconnectReason disconnectReason = DisconnectReason.ManuallyClose;
+        public DisconnectReason DisconnectReason {
+            get {
+                return disconnectReason;
+            }
+        }
 
         protected EventManager eventManager;
         protected Socket socket;
@@ -135,10 +153,10 @@ namespace Pomelo.DotNetClient
                     this.protocol = new Protocol(this, this.socket);
                     NetWorkChanged(NetWorkState.CONNECTED);
                     //InnerNetworkChanged(NetWorkState.CONNECTED);
-                    //if (callback != null)
-                    //{
-                    //    callback();
-                    //}
+                    if (callback != null)
+                    {
+                        callback();
+                    }
                 }
                 catch (SocketException e)
                 {
@@ -165,7 +183,7 @@ namespace Pomelo.DotNetClient
         }
 
         /// <summary>
-        /// 网络状态变化
+        /// ����״̬�仯
         /// </summary>
         /// <param name="state"></param>
         private void NetWorkChanged(NetWorkState state)
@@ -261,8 +279,9 @@ namespace Pomelo.DotNetClient
             }
         }
 
-        public void disconnect()
+        public void disconnect(DisconnectReason reason)
         {
+            this.disconnectReason = reason;
             NetWorkChanged(NetWorkState.DISCONNECTED);
             Dispose();
         }
@@ -296,7 +315,7 @@ namespace Pomelo.DotNetClient
             }
             catch (Exception e)
             {
-                //todo : 有待确定这里是否会出现异常，这里是参考之前官方github上pull request。emptyMsg
+                //todo : �д�ȷ�������Ƿ������쳣�������ǲο�֮ǰ�ٷ�github��pull request��emptyMsg
                 Debug.LogError(e);
             }
         }
