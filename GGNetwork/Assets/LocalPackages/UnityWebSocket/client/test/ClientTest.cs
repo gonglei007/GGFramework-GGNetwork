@@ -32,7 +32,7 @@ namespace Pomelo.DotNetClient.Test
         {
             if (Convert.ToInt32(result["code"]) == 200)
             {
-                pc.disconnect();
+                pc.disconnect(DisconnectReason.Test);
 
                 string host = (string)result["host"];
                 int port = Convert.ToInt32(result["port"]);
