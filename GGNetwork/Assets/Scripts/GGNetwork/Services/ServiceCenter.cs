@@ -26,7 +26,9 @@ namespace GGFramework.GGNetwork
 
         public void Init(string serviceCenterUrl = null) {
             this.serviceCenterUrl = serviceCenterUrl;
-            httpDNS.Init(HTTP_DNS_HOST);
+            // 这个项目先不开启下面两个服务。等需要的时候再开启。
+            //httpDNS.Init(HTTP_DNS_HOST);
+            //EagleEye.Init();
         }
 
         /// <summary>

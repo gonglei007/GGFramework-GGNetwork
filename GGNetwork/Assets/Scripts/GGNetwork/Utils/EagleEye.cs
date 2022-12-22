@@ -35,6 +35,7 @@ public class EagleEye
     /// 控制网络诊断频率的字典，Key是网络地址信息，value是上一次触发的时间戳（单位秒）
     /// </summary>
     static Dictionary<string, long> TestFrequencyControlDict = new Dictionary<string, long>();
+    static bool On = false;
 
     public class ReportParamData
     {
@@ -84,6 +85,13 @@ public class EagleEye
         }
     }
 
+    /// <summary>
+    /// 调用初始化之后才打开功能。
+    /// </summary>
+    static public void Init() {
+        EagleEye.On = true;
+    }
+
     static public void SetProxy(string proxy)
     {
         HTTPManager.Proxy = new HTTPProxy(new Uri(proxy));
@@ -98,6 +106,9 @@ public class EagleEye
      */
     static public void TestNetwork(string identityInfo, string extraReportParam = "")
     {
+        if (!EagleEye.On) {
+            return;
+        }
         try
         {
             if (TestFrequencyControlDict.TryGetValue(identityInfo, out long lastRequestTimestamp))

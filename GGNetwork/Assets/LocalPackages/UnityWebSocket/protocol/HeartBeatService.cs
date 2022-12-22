@@ -39,7 +39,7 @@ namespace Pomelo.DotNetClient
             //check timeout
             if (timeout > interval * 2)
             {
-                protocol.getPomeloClient().disconnect();
+                protocol.getPomeloClient().disconnect(DisconnectReason.HeatbeatBroken);
                 stop();
                 return;
             }
