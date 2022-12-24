@@ -40,11 +40,16 @@ TODO: 图形化展示
     </tr>
 </table>
 
-## 快速手册 
-* [如何快速接入](/documents/quickstart.md)
+## 手册 
+* [如何快速接入?](/documents/quickstart.md)
+* 技术手册(TODO)
+* 参考文档(TODO)
 
 ## 进群沟通
-* QQ群: 242500383 [![GLTOP游戏研发与技术1群](https://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=fy4Z65nE-5Jd1ay8FkJpDc9iPJyW3d38&jump_from=webapi) 
+|  |  | |
+| --- | -------- | -------- |
+| QQ群: | 242500383 | [![GLTOP游戏研发与技术1群](https://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=fy4Z65nE-5Jd1ay8FkJpDc9iPJyW3d38&jump_from=webapi) |
+|  |  | |
 
 ## TODO-List
 * 整理代码，把BestHttp和PomeloClient充分剥离出来。作为可选插件。
