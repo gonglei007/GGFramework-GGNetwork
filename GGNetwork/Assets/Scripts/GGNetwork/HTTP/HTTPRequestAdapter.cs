@@ -10,21 +10,21 @@ namespace GGFramework.GGNetwork
     /// </summary>
     public static class HTTPRequestAdapter
     {
-        private static Dictionary<GGHTTPRequest, string> serviceTypeMap = new Dictionary<GGHTTPRequest, string>();
+        private static Dictionary<HTTPRequest, string> serviceTypeMap = new Dictionary<HTTPRequest, string>();
 
-        public static void SetServiceType(this GGHTTPRequest request, string serviceType)
+        public static void SetServiceType(this HTTPRequest request, string serviceType)
         {
             serviceTypeMap[request] = serviceType;
-            Debug.Log(">>set service type:" + request.request.Uri.ToString());
+            Debug.Log(">>set service type:" + request.GetUri().ToString());
         }
 
-        public static string GetServiceType(this GGHTTPRequest request)
+        public static string GetServiceType(this HTTPRequest request)
         {
             if (request == null)
             {
                 throw new Exception("Illegal http request!");
             }
-            Debug.Log(">>get service type:" + request.request.Uri.ToString());
+            Debug.Log(">>get service type:" + request.GetUri().ToString());
             if (!serviceTypeMap.ContainsKey(request))
             {
                 return null;

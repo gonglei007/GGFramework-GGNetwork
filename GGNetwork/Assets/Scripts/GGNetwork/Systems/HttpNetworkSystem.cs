@@ -95,15 +95,23 @@ namespace GGFramework.GGNetwork
             }
         }
 
+        HTTPFactory httpFactory = null;
+
+        public HTTPFactory HTTPFactory {
+            get {
+                return httpFactory;
+            }
+        }
+
         public void Awake()
         {
             //HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
             BestHTTP.HTTPManager.Setup();
         }
 
-        public void Init()
+        public void Init<T>(T httpFactory)
         {
-            //TODO: 
+            this.httpFactory = httpFactory as HTTPFactory;
         }
 
         /// <summary>
@@ -139,7 +147,7 @@ namespace GGFramework.GGNetwork
             return serviceUrls[service];
         }
 
-        public List<RequestItem> needRetryItems = new List<RequestItem>();
+        //public List<RequestItem> needRetryItems = new List<RequestItem>();
 
         private static string token = null;
 
@@ -161,12 +169,12 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void DoSendRequest(GGHTTPRequest request)
+        private void DoSendRequest(HTTPRequest request)
         {
             uiAdaptor.ShowWaiting(true);
             TaskSystem.Instance.QueueJob(() => {
-                Debug.LogFormat("[thread-{0}]开始请求:{1}", Thread.CurrentThread.ManagedThreadId, request.request.Uri.ToString());
-                BestHTTP.HTTPManager.SendRequest(request.request);
+                Debug.LogFormat("[thread-{0}]开始请求:{1}", Thread.CurrentThread.ManagedThreadId, request.GetUri().ToString());
+                request.SendRequest();
                 return null;
             });
         }
@@ -179,24 +187,24 @@ namespace GGFramework.GGNetwork
         /// <param name="paramObject"></param>
         /// <param name="exceptionAction">应用层定义不同的请求接口，根据消息类型（游戏消息、内购消息、流程消息、帐号消息）来决定异常响应类型。</param>
         /// <param name="callback"></param>
-        public GGHTTPRequest PostWebRequest(string httpAddress, string command, JsonObject paramObject, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public HTTPRequest PostWebRequest(string httpAddress, string command, JsonObject paramObject, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             Debug.Assert(httpAddress != null && paramObject != null, "Illegal parameters!!!");
             PreProcessParam(paramObject);
             return PostWebRequest(httpAddress, command, paramObject.ToString(), "application/json; charset=UTF-8", null, exceptionAction, callback);
         }
 
-        public GGHTTPRequest PostWebRequest(string httpAddress, string command, string paramString, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public HTTPRequest PostWebRequest(string httpAddress, string command, string paramString, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             return PostWebRequest(httpAddress, command, paramString, "application/x-www-form-urlencoded; charset=UTF-8", null, exceptionAction, callback);
         }
 
-        public GGHTTPRequest PostWebRequest(string httpAddress, string command, WWWForm form, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public HTTPRequest PostWebRequest(string httpAddress, string command, WWWForm form, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
-            return PostWebRequest(httpAddress, command, "", "application/x-www-form-urlencoded; charset=UTF-8", new BestHTTP.Forms.UnityForm(form), exceptionAction, callback);
+            return PostWebRequest(httpAddress, command, "", "application/x-www-form-urlencoded; charset=UTF-8", new HTTPForm(form), exceptionAction, callback);
         }
 
-        private GGHTTPRequest PostWebRequest(string httpAddress, string command, string paramString, string contentType, BestHTTP.Forms.HTTPFormBase form = null, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        private HTTPRequest PostWebRequest(string httpAddress, string command, string paramString, string contentType, HTTPForm form = null, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             if (httpAddress == null)
             {
@@ -215,7 +223,7 @@ namespace GGFramework.GGNetwork
             Uri baseUri = new Uri(httpAddress);
             //Debug.Log("ready to request:" + baseUri.ToString());
 
-            GGHTTPRequest postRequest = GGHTTPRequest.CreatePostRequest(
+            HTTPRequest postRequest = HTTPRequest.sCreatePostRequest(
                 new Uri(baseUri, command),
                 paramString,
                 contentType,
@@ -228,7 +236,7 @@ namespace GGFramework.GGNetwork
             return postRequest;
         }
 
-        public GGHTTPRequest GetWebRequest(string httpAddress, string command, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
+        public HTTPRequest GetWebRequest(string httpAddress, string command, ExceptionAction exceptionAction = ExceptionAction.ConfirmRetry, Action<JsonObject> callback = null)
         {
             if (httpAddress == null)
             {
@@ -250,7 +258,7 @@ namespace GGFramework.GGNetwork
             Uri baseUri = new Uri(httpAddress);
             Debug.Log("Http get: base Uri->" + baseUri.ToString());
 
-            GGHTTPRequest request = GGHTTPRequest.CreateGetRequest(
+            HTTPRequest request = HTTPRequest.sCreateGetRequest(
                 new Uri(baseUri, command),
                 exceptionAction,
                 callback
@@ -272,7 +280,7 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void OnExceptionHandler(GGHTTPRequest originalRequest, string message, ExceptionAction exceptionAction)
+        private void OnExceptionHandler(HTTPRequest originalRequest, string message, ExceptionAction exceptionAction)
         {
             //TODO: 可以考虑出错以后更改线路，以后再实现。
             //if (exceptionAction == ExceptionAction.AutoRetry || exceptionAction == ExceptionAction.ConfirmRetry)
@@ -315,7 +323,7 @@ namespace GGFramework.GGNetwork
                 case ExceptionAction.Tips:
                     uiAdaptor.ShowDialog("server_error", message, false, (bool retry) => {
                         //TODO: 通过uiAdaptor.ShowInfo(Type[tip/dialog])来展示信息。
-                        Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.request.Uri.ToString());
+                        Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.GetUri().ToString());
                     });
                     break;
                 default:
@@ -329,10 +337,9 @@ namespace GGFramework.GGNetwork
         /// <param name="originalRequest"></param>
         /// <param name="response"></param>
         /// <param name="callback"></param>
-        public void OnRequestFinished(GGHTTPRequest originalRequest, GGHTTPResponse response, ExceptionAction exceptionAction, Action<JsonObject> callback)
+        public void OnRequestFinished(HTTPRequest originalRequest, HTTPResponse response, ExceptionAction exceptionAction, Action<JsonObject> callback)
         {
             //Debug.LogFormat("<=thread id:{0}", Thread.CurrentThread.ManagedThreadId);
-            Debug.Log("originalRequest.State:" + originalRequest.request.State.ToString());
             //string serviceType = originalRequest.GetServiceType();
             //Debug.LogFormat(">>>>>>>>>>>>>>>>>请求返回, service type:{0}：", serviceType);
             uiAdaptor.ShowWaiting(false);
@@ -343,97 +350,82 @@ namespace GGFramework.GGNetwork
             //    OnExceptionHandler(originalRequest, string.Format("Http response is null!Fix it on server side!"), ExceptionAction.ConfirmRetry);
             //    return;
             //}
-			
-			JsonObject param = new JsonObject();
+
+            JsonObject param = new JsonObject();
 			param["protocol"] = "http";
-			param["host"] = originalRequest.request.CurrentUri.Host;
-			param["port"] = originalRequest.request.CurrentUri.Port;
-			param["state"] = originalRequest.request.State.ToString();
-			param["uri"] = Uri.EscapeDataString(originalRequest.request.CurrentUri.ToString());
-			
-            switch (originalRequest.request.State)
+			param["host"] = originalRequest.GetCurrentUri().Host;
+			param["port"] = originalRequest.GetCurrentUri().Port;
+			param["state"] = originalRequest.GetState().ToString();
+			param["uri"] = Uri.EscapeDataString(originalRequest.GetCurrentUri().ToString());
+            Debug.Log("originalRequest.State:" + originalRequest.GetState().ToString());
+
+            switch (originalRequest.GetState())
             {
                 // The request finished without any problem.
-                case BestHTTP.HTTPRequestStates.Finished:
-                    if (response.response.IsSuccess)
+                case HTTPRequest.States.Finished:
+                    // 如果没有成功，就说明是服务器返回的报错。
+                    if (response.IsSuccess())
                     {
                         Debug.LogFormat("({0}) Request. \n Response:\nstatus{1}\ndata:{2}",
-                            originalRequest.request.CurrentUri.ToString(),
-                            response.response.StatusCode.ToString(),
-                            response.response.DataAsText.ToString());
+                            originalRequest.GetCurrentUri().ToString(),
+                            response.GetStatusCode().ToString(),
+                            response.GetData());
                         //Debug.Log("http response:" + response.response.DataAsText.ToString());
                         //Debug.Log("http response status:" + response.response.StatusCode.ToString());
                         //Debug.Log("http response data:" + response.DataAsText);
 
-                        if (response.response.StatusCode != NetworkConst.CODE_OK)
+                        if (response.GetStatusCode() != NetworkConst.CODE_OK)
                         {
-                            string errorMessage = string.Format("Server side error-[{0}]", response.response.StatusCode);
+                            string errorMessage = string.Format("Server side error-[{0}]", response.GetStatusCode());
                             Debug.LogError(errorMessage);
                             //originalRequest.request.Reset();
                             OnExceptionHandler(originalRequest, errorMessage, exceptionAction);
                             break;
                         }
+
+                        // 如果需要回调，继续下面的逻辑：解析返回的数据，并判断解析的结果。
+                        // 如果服务器成功响应并返回数据，就要判断业务层是否成功。
                         if (callback != null)
                         {
-                            //Debug.LogFormat("==:thread id:{0}", Thread.CurrentThread.ManagedThreadId);
-                            int code = NetworkConst.CODE_FAILED;
-                            JsonObject responseObj = null;
-                            try
+                            HandleServerData(response.GetData(), (Exception e, int code, JsonObject responseObject) =>
                             {
-                                string message = null;
-                                if (this.ParamType == EParamType.Json)
+                                if (e != null)
                                 {
-                                    responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(response.response.DataAsText);
-                                    if (responseObj.ContainsKey("code"))
-                                    {
-                                        code = Convert.ToInt32(responseObj["code"]);
-                                    }
-                                    if (code != NetworkConst.CODE_OK && (exceptionAction != ExceptionAction.Ignore && exceptionAction != ExceptionAction.Silence))
-                                    {
-                                        message = responseObj["msg"].ToString();
-                                        uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) =>
-                                        {
-                                            //DoSendRequest(originalRequest);
-                                        });
-                                    }
+                                    // 由于是后端的错误（严重错误）无法解析，直接弹框，让后端去解决此问题。
+                                    string errorDetail = string.Format("Response message parse error!-{0}", response.GetData());
+                                    Debug.LogError(errorDetail);
+                                    OnExceptionHandler(originalRequest, string.Format("[{0}] Ask developer to fix this exception:{1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), ExceptionAction.ConfirmRetry);
                                 }
-                                else if (this.ParamType == EParamType.Text) {
-                                    responseObj = new JsonObject();
-                                    responseObj["response"] = response.response.DataAsText;
+                                else {
+                                    // 业务层有报错，服务端应该返回相关的报错信息（msg）。
+                                    // code的正确与否，交给业务层去处理
+                                    //if (code != NetworkConst.CODE_OK)
+                                    //{
+                                    //    //这不是网络层的报错，是业务层报错，所以先不上报日志。
+                                    //    //logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
+                                    //    string serverMessage = responseObject["msg"].ToString();
+                                    //    OnExceptionHandler(originalRequest, serverMessage, exceptionAction);
+                                    //}
+                                    callback(responseObject);
                                 }
-
-                            }
-                            catch (Exception e)
-                            {
-                                // 由于是后端的错误（严重错误），直接弹框，让后端去解决此问题。
-                                string errorDetail = string.Format("Response message parse error!-{0}", response.response.DataAsText);
-                                Debug.LogError(errorDetail);
-                                OnExceptionHandler(originalRequest, string.Format("[{0}]ask-server-developer-to-fix. {1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), ExceptionAction.ConfirmRetry);
-                            }
-                            finally
-                            {
-                                // 发生异常情况就不进行回调了。
-                                if (responseObj != null)
-                                {
-                                    callback(responseObj);
-                                }
-                            }
+                            });
                         }
                     }
                     else
                     {
-						param["statusCode"] = response.response.StatusCode;
-						param["message"] = response.response.Message;
-						param["dataAsText"] = response.response.DataAsText;
-						logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
+                        // HTTP协议层报错，也要弹框告知前端。
+						param["statusCode"] = response.GetStatusCode();
+						param["message"] = response.GetMessage();
+						param["dataAsText"] = response.GetData();
+						logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
                         Debug.LogWarning(string.Format("Request finished Successfully, but the server sent an error. Status Code: {0}-{1} Message: {2}",
-                                                        response.response.StatusCode,
-                                                        response.response.Message,
-                                                        response.response.DataAsText));
-                        if (response.response.StatusCode != NetworkConst.CODE_OK)
+                                                        response.GetStatusCode(),
+                                                        response.GetMessage(),
+                                                        response.GetData()));
+                        if (response.GetStatusCode() != NetworkConst.CODE_OK)
                         {
-                            TriggerResponseError(response.response.StatusCode);
-                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.response.StatusCode.ToString(), response.response.Message, response.response.DataAsText), ExceptionAction.ConfirmRetry);
+                            TriggerResponseError(response.GetStatusCode());
+                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.GetStatusCode().ToString(), response.GetMessage(), response.GetData()), ExceptionAction.ConfirmRetry);
                             return;
                         }
                         //OnExceptionHandler(originalRequest, TextSystem.GetText("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.Tips);
@@ -442,23 +434,22 @@ namespace GGFramework.GGNetwork
                     break;
 
                 // The request finished with an unexpected error. The request's Exception property may contain more info about the error.
-                case BestHTTP.HTTPRequestStates.Error:
-                    string ExceptionMessage = originalRequest.request.Exception != null ? originalRequest.request.Exception.Message : "No Exception";
-                    Debug.LogError("Request Finished with Error! " + (originalRequest.request.Exception != null ? (originalRequest.request.Exception.Message + "\n" + originalRequest.request.Exception.StackTrace) : "No Exception"));
-					logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
+                case HTTPRequest.States.Error:
+                    string ExceptionMessage = originalRequest.GetExceptionMessage();
+					logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
                     OnExceptionHandler(originalRequest, ExceptionMessage, exceptionAction);
                     break;
 
                 // The request aborted, initiated by the user.
-                case BestHTTP.HTTPRequestStates.Aborted:
+                case HTTPRequest.States.Aborted:
                     //TODO:GL
                     Debug.LogWarning("Request Aborted!");
                     break;
 
                 // Connecting to the server is timed out.
-                case BestHTTP.HTTPRequestStates.ConnectionTimedOut:
+                case HTTPRequest.States.ConnectionTimedOut:
                     Debug.LogError("Connection Timed Out!");
-					logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
+					logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
                     if (exceptionAction == ExceptionAction.AutoRetry)
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
@@ -467,9 +458,9 @@ namespace GGFramework.GGNetwork
                     break;
 
                 // The request didn't finished in the given time.
-                case BestHTTP.HTTPRequestStates.TimedOut:
+                case HTTPRequest.States.TimedOut:
                     Debug.LogError("Processing the request Timed Out!");
-					logAdaptor.PostError(originalRequest.request.CurrentUri.Host, param);
+					logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
                     if (exceptionAction == ExceptionAction.AutoRetry)
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
@@ -486,7 +477,7 @@ namespace GGFramework.GGNetwork
             {
                 throw new Exception(string.Format("Illegal service URL!!!service:{0}", service));
             }
-            GGHTTPRequest request = PostWebRequest(url, command, jsonParams, exceptionAction, callback);
+            HTTPRequest request = PostWebRequest(url, command, jsonParams, exceptionAction, callback);
             //request.SetServiceType(service);
         }
 
@@ -553,28 +544,80 @@ namespace GGFramework.GGNetwork
         /// 重复发送http请求(按照斐波那契数列)
         /// </summary>
         /// <param name="deltaTime"></param>
-        public void LoopRequest(float deltaTime)
+        //public void LoopRequest(float deltaTime)
+        //{
+        //    for (int i = 0; i < needRetryItems.Count; i++)
+        //    {
+        //        needRetryItems[i].retryTime -= deltaTime;
+        //        if (needRetryItems[i].retryTime <= 0.0f)
+        //        {
+        //            //NetworkWaitingMask.ShowMask(false, "httpMask");
+        //            needRetryItems[i].retryNum = (needRetryItems[i].retryNum + 1) % 5;
+        //            //int tempIndex = (needRetryItems[i].retryNum % 5) + 1;// + 1是因为斐波那契数列没有0的选项
+        //            int tempIndex = needRetryItems[i].retryNum;
+        //            needRetryItems[i].retryTime = GetWaitTime(tempIndex);
+        //            //needRetryItems[i].retryNum++;
+        //            if (needRetryItems[i].retryNum % 5 == 0)
+        //            {
+        //                windowRequest = true;
+        //            }
+        //            else
+        //            {
+        //                //HttpThread.Instance.AddWebRequest(needRetryItems[i]);
+        //            }
+        //        }
+        //    }
+        //}
+
+        /// <summary>
+        /// 处理收到的响应数据。
+        /// </summary>
+        /// <returns></returns>
+        private void HandleServerData(string responseData, Action<Exception, int, JsonObject> callback)
         {
-            for (int i = 0; i < needRetryItems.Count; i++)
+            //Debug.LogFormat("==:thread id:{0}", Thread.CurrentThread.ManagedThreadId);
+            Exception exp = null;
+            int code = NetworkConst.CODE_FAILED;
+            JsonObject responseObj = null;
+            try
             {
-                needRetryItems[i].retryTime -= deltaTime;
-                if (needRetryItems[i].retryTime <= 0.0f)
+                // 解析数据
+                if (this.ParamType == EParamType.Json)
                 {
-                    //NetworkWaitingMask.ShowMask(false, "httpMask");
-                    needRetryItems[i].retryNum = (needRetryItems[i].retryNum + 1) % 5;
-                    //int tempIndex = (needRetryItems[i].retryNum % 5) + 1;// + 1是因为斐波那契数列没有0的选项
-                    int tempIndex = needRetryItems[i].retryNum;
-                    needRetryItems[i].retryTime = GetWaitTime(tempIndex);
-                    //needRetryItems[i].retryNum++;
-                    if (needRetryItems[i].retryNum % 5 == 0)
+                    responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(responseData);
+                    if (responseObj.ContainsKey("code"))
                     {
-                        windowRequest = true;
+                        code = Convert.ToInt32(responseObj["code"]);
                     }
-                    else
-                    {
-                        //HttpThread.Instance.AddWebRequest(needRetryItems[i]);
+                    else {
+                        code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
+                        throw new Exception("Response data lose 'code' field!");
+                    }
+                    if (code != NetworkConst.CODE_OK && !responseObj.ContainsKey("msg")) {
+                        code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
+                        throw new Exception("Response data lose 'msg' field!");
                     }
                 }
+                else if (this.ParamType == EParamType.Text)
+                {
+                    responseObj = new JsonObject();
+                    responseObj["response"] = responseData;
+                }
+
+            }
+            catch (Exception e)
+            {
+                exp = e;
+            }
+            finally
+            {
+                callback(exp, code, responseObj);
+                //return responseObj;
+                //// 发生异常情况就不进行回调了。
+                //if (responseObj != null)
+                //{
+                //    callback(responseObj);
+                //}
             }
         }
 
