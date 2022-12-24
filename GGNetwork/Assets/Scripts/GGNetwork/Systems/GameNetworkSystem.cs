@@ -12,7 +12,7 @@ namespace GGFramework.GGNetwork
         public void Init() {
             // 下面的调用顺序不能随便改动。
             NetworkConst.InitEx();
-            HttpNetworkSystem.Instance.Init();
+            HttpNetworkSystem.Instance.Init<BestHTTPFactory>(new BestHTTPFactory());
             NetworkSystem.Instance.Init();
             ServiceCenter.Instance.Init();
             NetworkRecorder.Instance.Init();
