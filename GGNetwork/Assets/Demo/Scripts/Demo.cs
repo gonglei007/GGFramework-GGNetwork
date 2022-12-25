@@ -11,8 +11,18 @@ public class Demo : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // 初始化游戏网络系统
         GameNetworkSystem.Instance.Init();
         //HttpNetworkSystem.Instance.ParamType = HttpNetworkSystem.EParamType.Text;
+
+        // 绑定文本（本地化）处理
+        HttpNetworkSystem.Instance.UIAdaptor.onGetText = (string text) => {
+            string retText = text;
+            //string retText = Localization.GetText(text);
+            return retText;
+        };
+
+        // 绑定对话框。用于异常时给用户的反馈。
         HttpNetworkSystem.Instance.UIAdaptor.onDialog = (string title, string msg, bool retry, Action<bool> callback) =>{
             Debug.Log(title + " | " + msg + " | " + retry.ToString());
             QuestionDialogUI.Instance.ShowQuestion(title + " | " + msg, () => {
@@ -22,17 +32,13 @@ public class Demo : MonoBehaviour
                 // Do things on No
             });
         };
+
+        // 绑定网络报错。收到消息可以考虑上报日志。
         HttpNetworkSystem.Instance.LogAdaptor.onPostNetworkError = (string host, JsonObject param) => {
             string reportJson = SimpleJson.SimpleJson.SerializeObject(param);
             Debug.LogErrorFormat("Post error info to host. [{0}] | {1}", host, reportJson);
             EagleEye.TestNetwork(host, reportJson);
         };
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     void OnGUI()
@@ -83,19 +89,5 @@ public class Demo : MonoBehaviour
                 QuestionDialogUI.Instance.ShowQuestion("[Bad] | " + response.ToString(), () => { }, () => { });
             });
         }
-
-        //if (GUI.Button(new Rect(XOffset, YOffset * 4, ButtonWidth, ButtonHeight), "Test Dialog"))
-        //{
-        //    QuestionDialogUI.Instance.ShowQuestion("Are you sure you want to quit the game?", () => {
-        //        QuestionDialogUI.Instance.ShowQuestion("Are you really sure?", () => {
-        //            Application.Quit();
-        //            //EditorApplication.ExitPlaymode();
-        //        }, () => {
-        //            // Do nothing
-        //        });
-        //    }, () => {
-        //        // Do nothing on No
-        //    });
-        //}
     }
 }
