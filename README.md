@@ -53,3 +53,7 @@ TODO: 图形化展示
 
 ## TODO-List
 * 整理代码，把BestHttp和PomeloClient充分剥离出来。作为可选插件。
+
+## 更多资料
+* [游戏开发图谱](https://github.com/gonglei007/GameDevMind)
+  * [客户端网络系统](https://github.com/gonglei007/GameDevMind/blob/main/mds/3.1.4.%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%BD%91%E7%BB%9C%E7%B3%BB%E7%BB%9F.md)
