@@ -69,6 +69,18 @@ namespace GGFramework.GGNetwork
             }
         }
 
+        private bool checkLogicErrorCode = false;   // 是否检查服务端逻辑层的错误码。打开后，如果服务端业务逻辑返回的不是200，视为错误。
+        public bool CheckLogicErrorCode 
+        {
+            set
+            {
+                checkLogicErrorCode = true;
+            }
+            get
+            {
+                return checkLogicErrorCode;
+            }
+        }
         private bool enablePreProcessParam = false;    // 是否开启参数预处理，如果开启，会在参数前加入签名等。这就需要服务端支持。
         public bool EnablePreProcessParam
         {
@@ -398,15 +410,17 @@ namespace GGFramework.GGNetwork
                                 }
                                 else {
                                     // 业务层有报错，服务端应该返回相关的报错信息（msg）。
-                                    // code的正确与否，交给业务层去处理
-                                    //if (code != NetworkConst.CODE_OK)
-                                    //{
-                                    //    //这不是网络层的报错，是业务层报错，所以先不上报日志。
-                                    //    //logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
-                                    //    string serverMessage = responseObject["msg"].ToString();
-                                    //    OnExceptionHandler(originalRequest, serverMessage, exceptionAction);
-                                    //}
-                                    callback(responseObject);
+                                    if (this.CheckLogicErrorCode && code != NetworkConst.CODE_OK)
+                                    {
+                                        //这不是网络层的报错，是业务层报错，所以先不上报日志。
+                                        //logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
+                                        string serverMessage = responseObject["msg"].ToString();
+                                        OnExceptionHandler(originalRequest, serverMessage, exceptionAction);
+                                    }
+                                    else 
+                                    {
+                                        callback(responseObject);
+                                    }
                                 }
                             });
                         }

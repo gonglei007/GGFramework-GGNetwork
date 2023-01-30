@@ -39,6 +39,17 @@ public class EagleEye
 
     public class ReportParamData
     {
+        public class ErrorMsg
+        {
+            public string protocol;
+            public string reason;
+            public string uri;
+            public int status_code;
+            public string message;
+            public string data_as_text;
+            public string address;
+        }
+
         public int uid;
         public string domain;
         public string server_ip;
@@ -46,13 +57,7 @@ public class EagleEye
         public string channel_id;
         public string app_id = "wj_xxsg2";
 
-        public string protocol;
-        public string reason;
-        public string uri;
-        public string address;
-        public int statusCode;
-        public string message;
-        public string dataAsText;
+        public ErrorMsg err_msg;
     }
 
     public class ReportPostData
@@ -129,7 +134,7 @@ public class EagleEye
                 TestFrequencyControlDict.Add(identityInfo, GetTimestampSeconds());
             }
 
-            Debug.Log($"EagleEye Start: 发起一次诊断：{identityInfo}");
+            Debug.Log($"EagleEye Start: 发起一次诊断：{identityInfo} extraReportParam: {extraReportParam}");
 
             string token = GenerateToken(GET_TEST_URI);
             string completeURL = $"{HOST}{GET_TEST_URI}{string.Format(GET_TEST_PARAM, TASK_ID, authts, token)}";
