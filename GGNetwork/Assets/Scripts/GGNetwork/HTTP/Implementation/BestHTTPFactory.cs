@@ -5,19 +5,19 @@ public class BestHTTPFactory: HTTPFactory
 {
     public HTTPRequest CreateHTTPRequest(Uri uri)
     {
-        BestHTTPRequest request = new BestHTTPRequest(uri);
+        HTTPRequest request = new BestHTTPRequest(uri);
         return request;
     }
 
     public HTTPResponse CreateHTTPResponse()
     {
-        BestHTTPResponse response = new BestHTTPResponse();
+        HTTPResponse response = new BestHTTPResponse();
         return response;
     }
 
     public HTTPForm CreateHTTPForm()
     {
-        BestHTTPForm form = new BestHTTPForm();
+        HTTPForm form = new BestHTTPForm();
         return form;
     }
 }

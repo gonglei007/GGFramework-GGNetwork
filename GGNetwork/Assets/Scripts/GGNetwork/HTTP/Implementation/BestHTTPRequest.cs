@@ -42,7 +42,7 @@ public class BestHTTPRequest : HTTPRequest
 
     public override HTTPRequest CreatePostRequest(Uri uri, string contentType, byte[] byteArray, HTTPForm form, HttpNetworkSystem.ExceptionAction exceptionAction, Action<JsonObject> callback)
     {
-        base.CreatePostRequest(uri, contentType, byteArray, form, exceptionAction, callback);
+        //base.CreatePostRequest(uri, contentType, byteArray, form, exceptionAction, callback);
 
         request = new BestHTTP.HTTPRequest(uri);
         //TODO: 这个时间设定是给普通的post、get消息请求的。对于下载请求，需要另外设置超时。
