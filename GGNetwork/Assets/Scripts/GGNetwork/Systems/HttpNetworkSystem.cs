@@ -109,8 +109,10 @@ namespace GGFramework.GGNetwork
 
         HTTPFactory httpFactory = null;
 
-        public HTTPFactory HTTPFactory {
-            get {
+        public HTTPFactory HTTPFactory
+        {
+            get
+            {
                 return httpFactory;
             }
         }
@@ -230,7 +232,7 @@ namespace GGFramework.GGNetwork
             }
             Debug.Assert(paramString != null, "Illegal parameters!!!");
             if (this.enableHttpDNS) {
-                httpAddress = ServiceCenter.Instance.HTTPDNS.GetURLByIP(httpAddress);
+                httpAddress = ServiceCenter.Instance.HTTPDNSSystem.GetURLByIP(httpAddress);
             }
             Uri baseUri = new Uri(httpAddress);
             //Debug.Log("ready to request:" + baseUri.ToString());
@@ -262,7 +264,7 @@ namespace GGFramework.GGNetwork
             }
             if (this.enableHttpDNS)
             {
-                httpAddress = ServiceCenter.Instance.HTTPDNS.GetURLByIP(httpAddress);
+                httpAddress = ServiceCenter.Instance.HTTPDNSSystem.GetURLByIP(httpAddress);
             }
             command = PreProcessParam(command);
             GameDebugger.sPushLog(string.Format("url:{0} - command:{1}", httpAddress, command));
@@ -605,11 +607,13 @@ namespace GGFramework.GGNetwork
                     }
                     else {
                         code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
-                        throw new Exception("Response data lose 'code' field!");
+                        Debug.LogWarning("Response data lose 'code' field!");
+                        //throw new Exception("Response data lose 'code' field!");
                     }
                     if (code != NetworkConst.CODE_OK && !responseObj.ContainsKey("msg")) {
                         code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
-                        throw new Exception("Response data lose 'msg' field!");
+                        Debug.LogWarning("Response data lose 'msg' field!");
+                        //throw new Exception("Response data lose 'msg' field!");
                     }
                 }
                 else if (this.ParamType == EParamType.Text)

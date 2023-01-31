@@ -1,7 +1,7 @@
 ﻿using System;
 using GGFramework.GGNetwork;
 
-public class BestHTTPResponse: HTTPResponse
+internal class BestHTTPResponse: HTTPResponse
 {
     private BestHTTP.HTTPResponse response;
 
