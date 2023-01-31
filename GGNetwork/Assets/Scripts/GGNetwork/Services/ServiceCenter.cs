@@ -1,5 +1,6 @@
 using System;
 using SimpleJson;
+using GGFramework.GGNetwork.HTTPDNS;
 
 namespace GGFramework.GGNetwork
 {
@@ -10,24 +11,23 @@ namespace GGFramework.GGNetwork
     /// </summary>
     public class ServiceCenter : Singleton<ServiceCenter>
     {
-        //TODO: 后面可以做到配置中，从Init传进来。
-        public const string HTTP_DNS_HOST = "http://103.150.251.71/v1/dns/query";
         //TODO: GL - 从服务端获取、更新此参数
         public static int HttpConnectTimeout = 8;
         public static int HttpRequestTimeout = 15;
 
         private string serviceCenterUrl = null;     // 服务中心的地址。
-        private HTTPDNS httpDNS = new HTTPDNS();
-        public HTTPDNS HTTPDNS {
+        private HTTPDNSSystem httpDNSSystem = new HTTPDNSSystem();
+        public HTTPDNSSystem HTTPDNSSystem
+        {
             get {
-                return httpDNS;
+                return httpDNSSystem;
             }
         }
 
         public void Init(string serviceCenterUrl = null) {
             this.serviceCenterUrl = serviceCenterUrl;
             // 这个项目先不开启下面两个服务。等需要的时候再开启。
-            //httpDNS.Init(HTTP_DNS_HOST);
+            HTTPDNSSystem.Init(HTTPDNSFactory.Provider.CY);
             //EagleEye.Init();
         }
 

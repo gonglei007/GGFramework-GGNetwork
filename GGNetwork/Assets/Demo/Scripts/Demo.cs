@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using GGFramework.GGNetwork;
+using GGFramework.GGNetwork.HTTPDNS;
 using SimpleJson;
 
 public class Demo : MonoBehaviour
@@ -8,6 +9,7 @@ public class Demo : MonoBehaviour
     //private const string goodHttpURL = "https://www.baidu.com";
     private const string goodHttpURL = "http://dev.gltop.com:3000";
     private const string badHttpURL = "http://no.gltop.com:8080";   //"https://api.apiopen.top/singlePoetry";
+    private const string testDomain = "data-cy.hkqingyi.com";       // "dev.gltop.com"
     // Start is called before the first frame update
     void Start()
     {
@@ -15,6 +17,7 @@ public class Demo : MonoBehaviour
         GameNetworkSystem.Instance.Init();
         //HttpNetworkSystem.Instance.ParamType = HttpNetworkSystem.EParamType.Text;
 
+        HttpNetworkSystem.Instance.CheckLogicErrorCode = false;
         // 绑定文本（本地化）处理
         HttpNetworkSystem.Instance.UIAdaptor.onGetText = (string text) => {
             string retText = text;
@@ -50,9 +53,9 @@ public class Demo : MonoBehaviour
         // Good test
         if (GUI.Button(new Rect(XOffset, YOffset * 1, ButtonWidth, ButtonHeight), "HttpDNS Prepare"))
         {
-            ServiceCenter.Instance.HTTPDNS.ParseHost("dev.gltop.com", (string ip, HTTPDNS.EStatus status, string message)=> {
-                Debug.LogFormat("Host=>IP:{0}-status:{1}", ip, status);
-                QuestionDialogUI.Instance.ShowQuestion(string.Format("Host=>IP:{0}-status:{1}-{2}", ip, status, message), () => { }, () => { });
+            ServiceCenter.Instance.HTTPDNSSystem.ParseHost(testDomain, (HTTPDNSSystem.Cache cache, HTTPDNSSystem.EStatus status, string message)=> {
+                Debug.LogFormat("Host=>IP:{0}-status:{1}", cache.ip, status);
+                QuestionDialogUI.Instance.ShowQuestion(string.Format("Host=>IP:{0}-status:{1}-{2}", cache.ip, status, message), () => { }, () => { });
             });
         }
         if (GUI.Button(new Rect(XOffset, YOffset * 2, ButtonWidth, ButtonHeight), "Good Http Get Request"))

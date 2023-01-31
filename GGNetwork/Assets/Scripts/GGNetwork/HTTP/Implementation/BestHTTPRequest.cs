@@ -3,7 +3,7 @@ using SimpleJson;
 using UnityEngine;
 using GGFramework.GGNetwork;
 
-public class BestHTTPRequest : HTTPRequest
+internal class BestHTTPRequest : HTTPRequest
 {
     public BestHTTP.HTTPRequest request = null;
 

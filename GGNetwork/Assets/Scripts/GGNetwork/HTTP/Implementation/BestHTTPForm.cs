@@ -1,7 +1,7 @@
 ﻿using System;
 using GGFramework.GGNetwork;
 
-public class BestHTTPForm: HTTPForm
+internal class BestHTTPForm: HTTPForm
 {
     public BestHTTPForm()
     {
