@@ -1,6 +1,6 @@
 # GGNetwork (内测版)
 
-![GGNetwork](.documents/exports/GGNetwork_TDD.png?raw=true)
+![GGNetwork](documents/exports/GGNetwork_TDD.png?raw=true)
 
 一个游戏客户端网络框架，目标是为游戏的网络系统提供：
 * 游戏网络所需的功能
