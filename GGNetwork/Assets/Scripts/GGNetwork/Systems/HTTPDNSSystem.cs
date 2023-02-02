@@ -99,10 +99,16 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 if (cache == null || cache.ttl <= MIN_TTL_SECOND) {
                     continue;
                 }
+                //Debug.LogFormat("Cache [{0}]:updated-{1} | ttl-{2}", cache.domain, cache.UpdatedTime, cache.ttl);
                 if (cache.UpdatedTime > cache.ttl) {
-                    ParseHost(domain, (Cache cache, EStatus status, string ip) => {
+                    cache.ResetUpdateTime();
+                    ParseHost(domain, (Cache cacheRet, EStatus status, string message) => {
+                        //if (message != null)
+                        //{
+                        //    Debug.Log(message);
+                        //}
                         if (status == EStatus.RET_SUCCESS) {
-                            Debug.LogFormat("成功刷新域名:{0} | {1}", cache.domain, cache.ip);
+                            Debug.LogFormat("成功刷新域名:{0} | {1}", cacheRet.domain, cacheRet.ip);
                         }
                     });
                 }

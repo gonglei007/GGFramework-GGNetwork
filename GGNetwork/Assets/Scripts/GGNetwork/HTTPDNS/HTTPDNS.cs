@@ -10,8 +10,8 @@ namespace GGFramework.GGNetwork.HTTPDNS
     /// </summary>
     public interface HTTPDNS
     {
-        public void QueryHost(string domain, Action<HTTPDNSSystem.Cache, HTTPDNSSystem.EStatus, string> callback);
-        public void QueryHosts(string[] domains, Action<List<HTTPDNSSystem.Cache>, HTTPDNSSystem.EStatus, string> callback);
+        void QueryHost(string domain, Action<HTTPDNSSystem.Cache, HTTPDNSSystem.EStatus, string> callback);
+        void QueryHosts(string[] domains, Action<List<HTTPDNSSystem.Cache>, HTTPDNSSystem.EStatus, string> callback);
     }
 }
 
