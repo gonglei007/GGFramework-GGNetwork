@@ -19,8 +19,34 @@ namespace GGFramework.GGNetwork.HTTPDNS
             public string domain;
             public string ip;
             public int ttl;
-            public int updateTime;
+            public long updateTime;
+
+            /// <summary>
+            /// 获取时间戳（秒）
+            /// </summary>
+            /// <returns></returns>
+            private long GetTimeStampSecond()
+            {
+                DateTime foo = DateTime.Now;
+                long unixTime = ((DateTimeOffset)foo).ToUnixTimeSeconds();
+                return unixTime;
+                //return (DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalSeconds;
+            }
+
+            public int UpdatedTime
+            {
+                get {
+                    return (int)(GetTimeStampSecond() - updateTime);
+                }
+            }
+
+            public void ResetUpdateTime()
+            {
+                this.updateTime = GetTimeStampSecond();
+            }
         }
+
+        public const int MIN_TTL_SECOND = 1;
 
         public enum EStatus {
             RET_SUCCESS = 1000,
@@ -70,11 +96,13 @@ namespace GGFramework.GGNetwork.HTTPDNS
         {
             foreach (string domain in hostMap.Keys) {
                 Cache cache = hostMap[domain];
-                int now = DateTime.Now.Second;
-                if (now - cache.updateTime > cache.ttl) {
+                if (cache == null || cache.ttl <= MIN_TTL_SECOND) {
+                    continue;
+                }
+                if (cache.UpdatedTime > cache.ttl) {
                     ParseHost(domain, (Cache cache, EStatus status, string ip) => {
                         if (status == EStatus.RET_SUCCESS) {
-                            Debug.LogFormat("成功刷新域名:{0}", cache.ToString());
+                            Debug.LogFormat("成功刷新域名:{0} | {1}", cache.domain, cache.ip);
                         }
                     });
                 }

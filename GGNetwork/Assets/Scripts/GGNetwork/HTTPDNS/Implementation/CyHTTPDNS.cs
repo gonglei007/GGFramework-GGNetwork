@@ -7,10 +7,24 @@ namespace GGFramework.GGNetwork.HTTPDNS
 {
     internal class CyHTTPDNS: HTTPDNS
     {
-        public const string HTTP_DNS_HOST = "103.150.251.71";
+        //public const string HTTP_DNS_HOST = "103.150.251.71";   // 正式
+        public const string HTTP_DNS_HOST = "119.8.61.184:40021";   // 测试
         public const string HTTP_DNS_API_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query";
         public const string HTTP_DNS_API_MULTI_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query_multi";
+        private const int HTTP_TIMEOUT = 10;
 
+        private System.Random random = new System.Random();
+
+        private string PickOneIP(JsonArray ipList)
+        {
+            string ip = null;
+            if (ipList != null && ipList.Count > 0)
+            {
+                int randIndex = random.Next(ipList.Count);
+                ip = ipList[randIndex].ToString();
+            }
+            return ip;
+        }
 
         /// <summary>
         /// 从远端HttpDNS请求解析，返回IP。
@@ -33,7 +47,7 @@ namespace GGFramework.GGNetwork.HTTPDNS
             //}
             //JsonObject param = new JsonObject();
             //param["domain"] = domain;
-            HttpNetworkSystem.Instance.GetWebRequest(HTTP_DNS_API_QUERY, "?domain=" + domain, HttpNetworkSystem.ExceptionAction.ConfirmRetry, (JsonObject response) => {
+            HttpNetworkSystem.Instance.GetWebRequest(HTTP_DNS_API_QUERY, "?domain=" + domain, HttpNetworkSystem.ExceptionAction.Ignore, (JsonObject response) => {
                 if (response == null)
                 {
                     message = string.Format("Request http dns failed!-{0}", response.ToString());
@@ -43,21 +57,21 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 else
                 {
                     Debug.LogFormat("Response result:{0}", response.ToString());
-                    if (!response.ContainsKey("code"))
-                    {
-                        message = string.Format("Host responses wrong message format:{0}", response.ToString());
-                        Debug.LogError(message);
-                        callback(null, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
-                        return;
-                    }
-                    string code = response["code"].ToString();
-                    if (!code.Equals("200"))
-                    {
-                        message = string.Format("HTTP DNS failed!CODE:{0}", code);
-                        Debug.LogError(message);
-                        callback(null, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
-                        return;
-                    }
+                    //if (!response.ContainsKey("code"))
+                    //{
+                    //    message = string.Format("Host responses wrong message format:{0}", response.ToString());
+                    //    Debug.LogError(message);
+                    //    callback(null, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
+                    //    return;
+                    //}
+                    //string code = response["code"].ToString();
+                    //if (!code.Equals("200"))
+                    //{
+                    //    message = string.Format("HTTP DNS failed!CODE:{0}", code);
+                    //    Debug.LogError(message);
+                    //    callback(null, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
+                    //    return;
+                    //}
                     if (!response.ContainsKey("ipv4"))
                     {
                         message = string.Format("HTTP DNS server response error(not found ipv4)!");
@@ -65,11 +79,15 @@ namespace GGFramework.GGNetwork.HTTPDNS
                         callback(null, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
                         return;
                     }
-                    cache = new HTTPDNSSystem.Cache();
-                    cache.domain = domain;
-                    cache.ip = response["ipv4"].ToString();
-                    cache.ttl = Convert.ToInt32(response["ttl"].ToString());
-                    cache.updateTime = DateTime.Now.Second;
+                    JsonArray ipList = response["ipv4"] as JsonArray;
+                    string ip = PickOneIP(ipList);
+                    if (ip != null) {
+                        cache = new HTTPDNSSystem.Cache();
+                        cache.domain = domain;
+                        cache.ip = ip;
+                        cache.ttl = Convert.ToInt32(response["ttl"].ToString());
+                        cache.ResetUpdateTime();
+                    }
                     callback(cache, HTTPDNSSystem.EStatus.RET_SUCCESS, message);
                 }
             });
@@ -99,9 +117,9 @@ namespace GGFramework.GGNetwork.HTTPDNS
             string domainParam = String.Join(",", domains);
             int preConnectTimeout = ServiceCenter.HttpConnectTimeout;
             int preRequestTimeout = ServiceCenter.HttpRequestTimeout;
-            ServiceCenter.HttpConnectTimeout = 1;
-            ServiceCenter.HttpRequestTimeout = 1;
-            HttpNetworkSystem.Instance.GetWebRequest(HTTP_DNS_API_MULTI_QUERY, "?domain=" + domains.ToString(), HttpNetworkSystem.ExceptionAction.Silence, (JsonObject response) => {
+            ServiceCenter.HttpConnectTimeout = HTTP_TIMEOUT;
+            ServiceCenter.HttpRequestTimeout = HTTP_TIMEOUT;
+            HttpNetworkSystem.Instance.GetWebRequest(HTTP_DNS_API_MULTI_QUERY, "?domain=" + domainParam, HttpNetworkSystem.ExceptionAction.Ignore, (JsonObject response) => {
                 ServiceCenter.HttpConnectTimeout = preConnectTimeout;
                 ServiceCenter.HttpRequestTimeout = preRequestTimeout;
                 if (response == null)
@@ -112,21 +130,21 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 }
                 else
                 {
-                    if (!response.ContainsKey("code"))
-                    {
-                        message = string.Format("Host responses wrong message format:{0}", response.ToString());
-                        Debug.LogError(message);
-                        callback(dnsList, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
-                        return;
-                    }
-                    string code = response["code"].ToString();
-                    if (!code.Equals("200"))
-                    {
-                        message = string.Format("HTTP DNS failed!CODE:{0}", code);
-                        Debug.LogError(message);
-                        callback(dnsList, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
-                        return;
-                    }
+                    //if (!response.ContainsKey("code"))
+                    //{
+                    //    message = string.Format("Host responses wrong message format:{0}", response.ToString());
+                    //    Debug.LogError(message);
+                    //    callback(dnsList, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
+                    //    return;
+                    //}
+                    //string code = response["code"].ToString();
+                    //if (!code.Equals("200"))
+                    //{
+                    //    message = string.Format("HTTP DNS failed!CODE:{0}", code);
+                    //    Debug.LogError(message);
+                    //    callback(dnsList, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
+                    //    return;
+                    //}
                     if (!response.ContainsKey("dns_list"))
                     {
                         message = string.Format("HTTP DNS server response error(not found dns_list)!");
@@ -134,21 +152,16 @@ namespace GGFramework.GGNetwork.HTTPDNS
                         callback(dnsList, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
                         return;
                     }
-                    System.Random random = new System.Random();
                     JsonArray dnsArray = response["dns_list"] as JsonArray;
                     foreach(JsonObject dnsItem in dnsArray) {
                         JsonArray ipList = dnsItem["ips"] as JsonArray;
-                        string ip = null;
-                        if (ipList != null && ipList.Count > 0) {
-                            int randIndex = random.Next(ipList.Count);
-                            ip = ipList[randIndex].ToString();
-                        }
+                        string ip = PickOneIP(ipList);
                         if (ip != null) {
                             HTTPDNSSystem.Cache cache = new HTTPDNSSystem.Cache();
                             cache.domain = dnsItem["domain"].ToString();
                             cache.ip = ip;
                             cache.ttl = Convert.ToInt32(dnsItem["ttl"].ToString());
-                            cache.updateTime = DateTime.Now.Second;
+                            cache.ResetUpdateTime();
                             dnsList.Add(cache);
                         }
                     }

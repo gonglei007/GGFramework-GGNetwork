@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using GGFramework.GGNetwork;
 using GGFramework.GGNetwork.HTTPDNS;
@@ -10,6 +11,15 @@ public class Demo : MonoBehaviour
     private const string goodHttpURL = "http://dev.gltop.com:3000";
     private const string badHttpURL = "http://no.gltop.com:8080";   //"https://api.apiopen.top/singlePoetry";
     private const string testDomain = "data-cy.hkqingyi.com";       // "dev.gltop.com"
+    private string[] testDomains = new string[]{
+        "sg2quicksdk.hkqingyi.com",
+        "data-cy.hkqingyi.com",
+        "global.hkqingyi.com",
+        "sg2quicksdk.gotechgames.com",
+        "data-cy.gotechgames.com",
+        "global.gotechgames.com", 
+        "wjsg2.gotechgames.com", 
+    } ;
     // Start is called before the first frame update
     void Start()
     {
@@ -53,11 +63,18 @@ public class Demo : MonoBehaviour
         // Good test
         if (GUI.Button(new Rect(XOffset, YOffset * 1, ButtonWidth, ButtonHeight), "HttpDNS Prepare"))
         {
-            ServiceCenter.Instance.HTTPDNSSystem.ParseHost(testDomain, (HTTPDNSSystem.Cache cache, HTTPDNSSystem.EStatus status, string message)=> {
-                Debug.LogFormat("Host=>IP:{0}-status:{1}", cache.ip, status);
-                QuestionDialogUI.Instance.ShowQuestion(string.Format("Host=>IP:{0}-status:{1}-{2}", cache.ip, status, message), () => { }, () => { });
+            ServiceCenter.Instance.HTTPDNSSystem.ParseHosts(testDomains, (List<HTTPDNSSystem.Cache> caches, HTTPDNSSystem.EStatus status, string message)=> {
+                Debug.LogFormat("Host=>IP count:{0}-status:{1}", caches.Count, status);
+                QuestionDialogUI.Instance.ShowQuestion(string.Format("Host=>IP Count:{0}-status:{1}-{2}", caches.Count, status, message), () => { }, () => { });
             });
         }
+        //if (GUI.Button(new Rect(XOffset, YOffset * 1, ButtonWidth, ButtonHeight), "HttpDNS Prepare"))
+        //{
+        //    ServiceCenter.Instance.HTTPDNSSystem.ParseHost(testDomain, (HTTPDNSSystem.Cache cache, HTTPDNSSystem.EStatus status, string message) => {
+        //        Debug.LogFormat("Host=>IP:{0}-status:{1}", cache.ip, status);
+        //        QuestionDialogUI.Instance.ShowQuestion(string.Format("Host=>IP:{0}-status:{1}-{2}", cache.ip, status, message), () => { }, () => { });
+        //    });
+        //}
         if (GUI.Button(new Rect(XOffset, YOffset * 2, ButtonWidth, ButtonHeight), "Good Http Get Request"))
         {
             JsonObject param = new JsonObject();
