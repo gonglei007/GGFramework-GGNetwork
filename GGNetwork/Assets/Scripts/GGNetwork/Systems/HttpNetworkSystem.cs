@@ -412,11 +412,14 @@ namespace GGFramework.GGNetwork
                                 }
                                 else {
                                     // 业务层有报错，服务端应该返回相关的报错信息（msg）。
-                                    if (this.CheckLogicErrorCode && code != NetworkConst.CODE_OK)
+                                    if (exceptionAction != ExceptionAction.Ignore && code != NetworkConst.CODE_OK)
                                     {
                                         //这不是网络层的报错，是业务层报错，所以先不上报日志。
                                         //logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
-                                        string serverMessage = responseObject["msg"].ToString();
+                                        string serverMessage = String.Format("Server response failed!code-{0}", code);
+                                        if (responseObject.ContainsKey("msg")) {
+                                            serverMessage = responseObject["msg"].ToString();
+                                        }
                                         OnExceptionHandler(originalRequest, serverMessage, exceptionAction);
                                     }
                                     else 
@@ -600,20 +603,29 @@ namespace GGFramework.GGNetwork
                 // 解析数据
                 if (this.ParamType == EParamType.Json)
                 {
-                    responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(responseData);
-                    if (responseObj.ContainsKey("code"))
+                    if (this.CheckLogicErrorCode)
                     {
-                        code = Convert.ToInt32(responseObj["code"]);
+                        responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(responseData);
+                        if (responseObj.ContainsKey("code"))
+                        {
+                            code = Convert.ToInt32(responseObj["code"]);
+                        }
+                        else
+                        {
+                            code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
+                            Debug.LogWarning("Response data lose 'code' field!");
+                            //throw new Exception("Response data lose 'code' field!");
+                        }
+                        if (code != NetworkConst.CODE_OK && !responseObj.ContainsKey("msg"))
+                        {
+                            code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
+                            Debug.LogWarning("Response data lose 'msg' field!");
+                            //throw new Exception("Response data lose 'msg' field!");
+                        }
                     }
-                    else {
-                        code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
-                        Debug.LogWarning("Response data lose 'code' field!");
-                        //throw new Exception("Response data lose 'code' field!");
-                    }
-                    if (code != NetworkConst.CODE_OK && !responseObj.ContainsKey("msg")) {
-                        code = NetworkConst.CODE_RESPONSE_MSG_ERROR;
-                        Debug.LogWarning("Response data lose 'msg' field!");
-                        //throw new Exception("Response data lose 'msg' field!");
+                    else 
+                    {
+                        code = NetworkConst.CODE_OK;
                     }
                 }
                 else if (this.ParamType == EParamType.Text)
