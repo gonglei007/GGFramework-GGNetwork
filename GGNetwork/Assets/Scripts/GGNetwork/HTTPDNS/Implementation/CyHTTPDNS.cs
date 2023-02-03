@@ -29,10 +29,13 @@ namespace GGFramework.GGNetwork.HTTPDNS
         }
         public void Init(string apiHost)
         {
-            this.apiHost = apiHost;
-            HTTP_DNS_API_QUERY = "http://" + apiHost + "/v1/dns/query";
-            HTTP_DNS_API_MULTI_QUERY = "http://" + apiHost + "/v1/dns/query_multi";
-    }
+            if (!string.IsNullOrEmpty(apiHost))
+            {
+                this.apiHost = apiHost;
+                HTTP_DNS_API_QUERY = "http://" + apiHost + "/v1/dns/query";
+                HTTP_DNS_API_MULTI_QUERY = "http://" + apiHost + "/v1/dns/query_multi";
+            }
+        }
 
     /// <summary>
     /// 从远端HttpDNS请求解析，返回IP。
