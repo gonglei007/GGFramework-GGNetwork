@@ -93,7 +93,7 @@ namespace GGFramework.GGNetwork.HTTPDNS
                         cache = new HTTPDNSSystem.Cache();
                         cache.domain = domain;
                         cache.ip = ip;
-                        cache.ttl = Convert.ToInt32(response["ttl"].ToString());
+                        cache.TTL = Convert.ToInt32(response["ttl"].ToString());
                         cache.ResetUpdateTime();
                     }
                     callback(cache, HTTPDNSSystem.EStatus.RET_SUCCESS, message);
@@ -164,14 +164,12 @@ namespace GGFramework.GGNetwork.HTTPDNS
                     foreach(JsonObject dnsItem in dnsArray) {
                         JsonArray ipList = dnsItem["ips"] as JsonArray;
                         string ip = PickOneIP(ipList);
-                        if (ip != null) {
-                            HTTPDNSSystem.Cache cache = new HTTPDNSSystem.Cache();
-                            cache.domain = dnsItem["domain"].ToString();
-                            cache.ip = ip;
-                            cache.ttl = Convert.ToInt32(dnsItem["ttl"].ToString());
-                            cache.ResetUpdateTime();
-                            dnsList.Add(cache);
-                        }
+                        HTTPDNSSystem.Cache cache = new HTTPDNSSystem.Cache();
+                        cache.domain = dnsItem["domain"].ToString();
+                        cache.ip = ip;
+                        cache.TTL = Convert.ToInt32(dnsItem["ttl"].ToString());
+                        cache.ResetUpdateTime();
+                        dnsList.Add(cache);
                     }
                     Debug.LogFormat("Response result:{0}", response.ToString());
                     callback(dnsList, HTTPDNSSystem.EStatus.RET_SUCCESS, message);

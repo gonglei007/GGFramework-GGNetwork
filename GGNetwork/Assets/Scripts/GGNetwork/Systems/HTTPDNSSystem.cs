@@ -14,12 +14,24 @@ namespace GGFramework.GGNetwork.HTTPDNS
     /// </summary>
     public class HTTPDNSSystem : Singleton<HTTPDNSSystem>
     {
+        public const int MIN_TTL_SECOND = 2;
+
         public class Cache
         {
             public string domain;
             public string ip;
-            public int ttl;
             public long updateTime;
+            private int ttl = 60;
+            public int TTL
+            {
+                get {
+                    return ttl;
+                }
+                set {
+                    // 为了防止过于频繁的请求，先简单的处理成这样。
+                    ttl = value <= 1 ? MIN_TTL_SECOND : value;
+                }
+            }
 
             /// <summary>
             /// 获取时间戳（秒）
@@ -45,8 +57,6 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 this.updateTime = GetTimeStampSecond();
             }
         }
-
-        public const int MIN_TTL_SECOND = 1;
 
         public enum EStatus {
             RET_SUCCESS = 1000,
@@ -96,11 +106,11 @@ namespace GGFramework.GGNetwork.HTTPDNS
         {
             foreach (string domain in hostMap.Keys) {
                 Cache cache = hostMap[domain];
-                if (cache == null || cache.ttl <= MIN_TTL_SECOND) {
+                if (cache == null) {
                     continue;
                 }
                 //Debug.LogFormat("Cache [{0}]:updated-{1} | ttl-{2}", cache.domain, cache.UpdatedTime, cache.ttl);
-                if (cache.UpdatedTime > cache.ttl) {
+                if (cache.UpdatedTime > cache.TTL) {
                     cache.ResetUpdateTime();
                     ParseHost(domain, (Cache cacheRet, EStatus status, string message) => {
                         //if (message != null)
@@ -215,6 +225,10 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 {
                     hostMap[domain] = cache;
                 }
+                else 
+                {
+                    hostMap.Remove(domain);
+                }
                 callback(cache, status, message);
             });
         }
@@ -236,7 +250,14 @@ namespace GGFramework.GGNetwork.HTTPDNS
             }
             httpDNS.QueryHosts(domains, (List<Cache> cacheList, HTTPDNSSystem.EStatus status, string mesage) => {
                 foreach (Cache cache in cacheList) {
-                    hostMap[cache.domain] = cache;
+                    if (cache != null && cache.ip != null)
+                    {
+                        hostMap[cache.domain] = cache;
+                    }
+                    else
+                    {
+                        hostMap.Remove(cache.domain);
+                    }
                 }
                 callback(cacheList, status, message);
             });
