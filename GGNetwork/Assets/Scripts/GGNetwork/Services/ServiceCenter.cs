@@ -16,18 +16,10 @@ namespace GGFramework.GGNetwork
         public static int HttpRequestTimeout = 15;
 
         private string serviceCenterUrl = null;     // 服务中心的地址。
-        private HTTPDNSSystem httpDNSSystem = new HTTPDNSSystem();
-        public HTTPDNSSystem HTTPDNSSystem
-        {
-            get {
-                return httpDNSSystem;
-            }
-        }
 
         public void Init(string serviceCenterUrl = null) {
             this.serviceCenterUrl = serviceCenterUrl;
             // 这个项目先不开启下面两个服务。等需要的时候再开启。
-            HTTPDNSSystem.Init(HTTPDNSFactory.Provider.CY);
             //EagleEye.Init();
         }
 

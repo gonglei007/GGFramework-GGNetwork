@@ -11,14 +11,10 @@ public class Demo : MonoBehaviour
     private const string goodHttpURL = "http://dev.gltop.com:3000";
     private const string badHttpURL = "http://no.gltop.com:8080";   //"https://api.apiopen.top/singlePoetry";
     private const string testDomain = "data-cy.hkqingyi.com";       // "dev.gltop.com"
+    private const string HttpDNSAPIHost = "119.8.61.184:40021";
     private string[] testDomains = new string[]{
-        "sg2quicksdk.hkqingyi.com",
         "data-cy.hkqingyi.com",
-        "global.hkqingyi.com",
-        "sg2quicksdk.gotechgames.com",
         "data-cy.gotechgames.com",
-        "global.gotechgames.com", 
-        "wjsg2.gotechgames.com", 
     } ;
     // Start is called before the first frame update
     void Start()
@@ -26,6 +22,7 @@ public class Demo : MonoBehaviour
         // 初始化游戏网络系统
         GameNetworkSystem.Instance.Init();
         //HttpNetworkSystem.Instance.ParamType = HttpNetworkSystem.EParamType.Text;
+        HTTPDNSSystem.Instance.SetAPIHost(HttpDNSAPIHost);
 
         HttpNetworkSystem.Instance.CheckLogicErrorCode = false;
         // 绑定文本（本地化）处理
@@ -63,7 +60,7 @@ public class Demo : MonoBehaviour
         // Good test
         if (GUI.Button(new Rect(XOffset, YOffset * 1, ButtonWidth, ButtonHeight), "HttpDNS Prepare"))
         {
-            ServiceCenter.Instance.HTTPDNSSystem.ParseHosts(testDomains, (List<HTTPDNSSystem.Cache> caches, HTTPDNSSystem.EStatus status, string message)=> {
+            HTTPDNSSystem.Instance.ParseHosts(testDomains, (List<HTTPDNSSystem.Cache> caches, HTTPDNSSystem.EStatus status, string message)=> {
                 Debug.LogFormat("Host=>IP count:{0}-status:{1}", caches.Count, status);
                 QuestionDialogUI.Instance.ShowQuestion(string.Format("Host=>IP Count:{0}-status:{1}-{2}", caches.Count, status, message), () => { }, () => { });
             });

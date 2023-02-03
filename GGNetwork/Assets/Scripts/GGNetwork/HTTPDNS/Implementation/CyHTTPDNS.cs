@@ -9,9 +9,11 @@ namespace GGFramework.GGNetwork.HTTPDNS
     {
         //public const string HTTP_DNS_HOST = "103.150.251.71";   // 正式
         public const string HTTP_DNS_HOST = "119.8.61.184:40021";   // 测试
-        public const string HTTP_DNS_API_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query";
-        public const string HTTP_DNS_API_MULTI_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query_multi";
         private const int HTTP_TIMEOUT = 10;
+
+        private string apiHost = HTTP_DNS_HOST;
+        private string HTTP_DNS_API_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query";
+        private string HTTP_DNS_API_MULTI_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query_multi";
 
         private System.Random random = new System.Random();
 
@@ -25,16 +27,22 @@ namespace GGFramework.GGNetwork.HTTPDNS
             }
             return ip;
         }
+        public void Init(string apiHost)
+        {
+            this.apiHost = apiHost;
+            HTTP_DNS_API_QUERY = "http://" + apiHost + "/v1/dns/query";
+            HTTP_DNS_API_MULTI_QUERY = "http://" + apiHost + "/v1/dns/query_multi";
+    }
 
-        /// <summary>
-        /// 从远端HttpDNS请求解析，返回IP。
-        /// 先从本地缓存获取，如果缓存有，就用缓存的。
-        /// 如果缓存没有，就从远端api获取。
-        /// 如果获取失败，就不解析了。
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <param name="callback"></param>
-        public void QueryHost(string domain, Action<HTTPDNSSystem.Cache, HTTPDNSSystem.EStatus, string> callback)
+    /// <summary>
+    /// 从远端HttpDNS请求解析，返回IP。
+    /// 先从本地缓存获取，如果缓存有，就用缓存的。
+    /// 如果缓存没有，就从远端api获取。
+    /// 如果获取失败，就不解析了。
+    /// </summary>
+    /// <param name="domain"></param>
+    /// <param name="callback"></param>
+    public void QueryHost(string domain, Action<HTTPDNSSystem.Cache, HTTPDNSSystem.EStatus, string> callback)
         {
             HTTPDNSSystem.Cache cache = null;
             string message = "OK";
