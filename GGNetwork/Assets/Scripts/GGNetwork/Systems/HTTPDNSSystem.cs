@@ -12,7 +12,7 @@ namespace GGFramework.GGNetwork.HTTPDNS
     /// TODO: 目前是针对橙域的服务来做的。后续可以进一步抽象。
     /// TODO: 在这里要缓存解析过的IP。
     /// </summary>
-    public class HTTPDNSSystem
+    public class HTTPDNSSystem : Singleton<HTTPDNSSystem>
     {
         public class Cache
         {
@@ -136,6 +136,14 @@ namespace GGFramework.GGNetwork.HTTPDNS
         /// <returns></returns>
         private string ReplaceHost(Uri uri, string host) {
             return ReplaceHost(uri.ToString(), host);
+        }
+
+        public void SetAPIHost(string apiHost)
+        {
+            if (httpDNS != null) 
+            {
+                httpDNS.Init(apiHost);
+            }
         }
 
         /// <summary>

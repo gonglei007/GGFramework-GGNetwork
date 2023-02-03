@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using GGFramework.GGNetwork.HTTPDNS;
 
 namespace GGFramework.GGNetwork
 {
@@ -13,6 +14,7 @@ namespace GGFramework.GGNetwork
             // 下面的调用顺序不能随便改动。
             NetworkConst.InitEx();
             HttpNetworkSystem.Instance.Init<BestHTTPFactory>(new BestHTTPFactory());
+            HTTPDNSSystem.Instance.Init(HTTPDNSFactory.Provider.CY);
             NetworkSystem.Instance.Init();
             ServiceCenter.Instance.Init();
             NetworkRecorder.Instance.Init();

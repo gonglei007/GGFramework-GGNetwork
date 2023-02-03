@@ -6,6 +6,7 @@ using System.Threading;
 using SimpleJson;
 using System.Text;
 using GGFramework.GGTask;
+using GGFramework.GGNetwork.HTTPDNS;
 
 namespace GGFramework.GGNetwork
 {
@@ -232,7 +233,7 @@ namespace GGFramework.GGNetwork
             }
             Debug.Assert(paramString != null, "Illegal parameters!!!");
             if (this.enableHttpDNS) {
-                httpAddress = ServiceCenter.Instance.HTTPDNSSystem.GetURLByIP(httpAddress);
+                httpAddress = HTTPDNSSystem.Instance.GetURLByIP(httpAddress);
             }
             Uri baseUri = new Uri(httpAddress);
             //Debug.Log("ready to request:" + baseUri.ToString());
@@ -264,7 +265,7 @@ namespace GGFramework.GGNetwork
             }
             if (this.enableHttpDNS)
             {
-                httpAddress = ServiceCenter.Instance.HTTPDNSSystem.GetURLByIP(httpAddress);
+                httpAddress = HTTPDNSSystem.Instance.GetURLByIP(httpAddress);
             }
             command = PreProcessParam(command);
             GameDebugger.sPushLog(string.Format("url:{0} - command:{1}", httpAddress, command));
