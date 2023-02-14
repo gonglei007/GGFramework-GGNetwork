@@ -51,7 +51,7 @@
 
 ## 文档
 * [如何快速接入?](/documents/quickstart.md)
-* 技术手册(TODO)
+* [技术手册](/documents/manual.md)
 * 参考文档(TODO)
 
 ## 进群沟通
