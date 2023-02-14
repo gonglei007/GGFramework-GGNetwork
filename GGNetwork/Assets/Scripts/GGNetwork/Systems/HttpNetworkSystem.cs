@@ -23,14 +23,10 @@ namespace GGFramework.GGNetwork
     {
         public enum ExceptionAction
         {
-            Ignore,
-            // 忽略。如果回调中会自行处理异常情况，就使用Ignore类型。
-            ConfirmRetry,
-            // 弹出消息框，等玩家操作。
-            AutoRetry,
-            // 自动静默重试。  //TODO: GL - 先别用这个Type，这个可能会立即无限尝试。将来要改造成定时尝试（如果是在主线程，就放到Update中定时检测）。
-            Silence,
-            // 静默，只发，无UI响应。
+            Ignore,         // 忽略。如果回调中会自行处理异常情况，就使用Ignore类型。
+            ConfirmRetry,   // 弹出消息框，等玩家操作。
+            AutoRetry,      // 自动静默重试。  //TODO: GL - 先别用这个Type，这个可能会立即无限尝试。将来要改造成定时尝试（如果是在主线程，就放到Update中定时检测）。
+            Silence,        // 静默，只发，无UI响应。
             Tips,
         }
 
@@ -295,7 +291,7 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void OnExceptionHandler(HTTPRequest originalRequest, string message, ExceptionAction exceptionAction)
+        private void OnExceptionHandler(HTTPRequest originalRequest, string message, ExceptionAction exceptionAction, Action<JsonObject> callback)
         {
             //TODO: 可以考虑出错以后更改线路，以后再实现。
             //if (exceptionAction == ExceptionAction.AutoRetry || exceptionAction == ExceptionAction.ConfirmRetry)
@@ -340,6 +336,14 @@ namespace GGFramework.GGNetwork
                         //TODO: 通过uiAdaptor.ShowInfo(Type[tip/dialog])来展示信息。
                         Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.GetUri().ToString());
                     });
+                    break;
+                case ExceptionAction.Ignore:
+                    if (callback != null)
+                    {
+                        JsonObject response = new JsonObject();
+                        response["message"] = message;
+                        callback(response);
+                    }
                     break;
                 default:
                     break;
@@ -394,42 +398,39 @@ namespace GGFramework.GGNetwork
                             string errorMessage = string.Format("Server side error-[{0}]", response.GetStatusCode());
                             Debug.LogError(errorMessage);
                             //originalRequest.request.Reset();
-                            OnExceptionHandler(originalRequest, errorMessage, exceptionAction);
+                            OnExceptionHandler(originalRequest, errorMessage, exceptionAction, callback);
                             break;
                         }
 
                         // 如果需要回调，继续下面的逻辑：解析返回的数据，并判断解析的结果。
                         // 如果服务器成功响应并返回数据，就要判断业务层是否成功。
-                        if (callback != null)
+                        HandleServerData(response.GetData(), (Exception e, int code, JsonObject responseObject) =>
                         {
-                            HandleServerData(response.GetData(), (Exception e, int code, JsonObject responseObject) =>
+                            if (e != null)
                             {
-                                if (e != null)
+                                // 由于是后端的错误（严重错误）无法解析，直接弹框，让后端去解决此问题。
+                                string errorDetail = string.Format("Response message parse error!-{0}", response.GetData());
+                                Debug.LogError(errorDetail);
+                                OnExceptionHandler(originalRequest, string.Format("[{0}] Ask developer to fix this exception:{1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), exceptionAction, callback);
+                            }
+                            else {
+                                // 业务层有报错，服务端应该返回相关的报错信息（msg）。
+                                if (code != NetworkConst.CODE_OK)
                                 {
-                                    // 由于是后端的错误（严重错误）无法解析，直接弹框，让后端去解决此问题。
-                                    string errorDetail = string.Format("Response message parse error!-{0}", response.GetData());
-                                    Debug.LogError(errorDetail);
-                                    OnExceptionHandler(originalRequest, string.Format("[{0}] Ask developer to fix this exception:{1}", NetworkConst.CODE_RESPONSE_MSG_ERROR, e.ToString()), ExceptionAction.ConfirmRetry);
-                                }
-                                else {
-                                    // 业务层有报错，服务端应该返回相关的报错信息（msg）。
-                                    if (exceptionAction != ExceptionAction.Ignore && code != NetworkConst.CODE_OK)
-                                    {
-                                        //这不是网络层的报错，是业务层报错，所以先不上报日志。
-                                        //logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
-                                        string serverMessage = String.Format("Server response failed!code-{0}", code);
-                                        if (responseObject.ContainsKey("msg")) {
-                                            serverMessage = responseObject["msg"].ToString();
-                                        }
-                                        OnExceptionHandler(originalRequest, serverMessage, exceptionAction);
+                                    //这不是网络层的报错，是业务层报错，所以先不上报日志。
+                                    //logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
+                                    string serverMessage = String.Format("Server response failed!code-{0}", code);
+                                    if (responseObject.ContainsKey("msg")) {
+                                        serverMessage = responseObject["msg"].ToString();
                                     }
-                                    else 
-                                    {
-                                        callback(responseObject);
-                                    }
+                                    OnExceptionHandler(originalRequest, serverMessage, exceptionAction, callback);
                                 }
-                            });
-                        }
+                                else 
+                                {
+                                    callback(responseObject);
+                                }
+                            }
+                        });
                     }
                     else
                     {
@@ -438,15 +439,14 @@ namespace GGFramework.GGNetwork
 						param["message"] = response.GetMessage();
 						param["dataAsText"] = response.GetData();
 						logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
-                        Debug.LogWarning(string.Format("Request finished Successfully, but the server sent an error. Status Code: {0}-{1} Message: {2}",
+                        Debug.LogError(string.Format("Request finished Successfully, but the server sent an error. Status Code: {0}-{1} Message: {2}",
                                                         response.GetStatusCode(),
                                                         response.GetMessage(),
                                                         response.GetData()));
                         if (response.GetStatusCode() != NetworkConst.CODE_OK)
                         {
                             TriggerResponseError(response.GetStatusCode());
-                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.GetStatusCode().ToString(), response.GetMessage(), response.GetData()), ExceptionAction.ConfirmRetry);
-                            return;
+                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.GetStatusCode().ToString(), response.GetMessage(), response.GetData()), exceptionAction, callback);
                         }
                         //OnExceptionHandler(originalRequest, TextSystem.GetText("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.Tips);
                         //因为后端判断有严重异常，所以处理异常后不要再继续调callback了。
@@ -457,7 +457,7 @@ namespace GGFramework.GGNetwork
                 case HTTPRequest.States.Error:
                     string ExceptionMessage = originalRequest.GetExceptionMessage();
 					logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
-                    OnExceptionHandler(originalRequest, ExceptionMessage, exceptionAction);
+                    OnExceptionHandler(originalRequest, ExceptionMessage, exceptionAction, callback);
                     break;
 
                 // The request aborted, initiated by the user.
@@ -474,7 +474,7 @@ namespace GGFramework.GGNetwork
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
                     }
-                    OnExceptionHandler(originalRequest, "Connection Timed Out!", exceptionAction);
+                    OnExceptionHandler(originalRequest, "Connection Timed Out!", exceptionAction, callback);
                     break;
 
                 // The request didn't finished in the given time.
@@ -485,7 +485,7 @@ namespace GGFramework.GGNetwork
                     {
                         exceptionAction = ExceptionAction.ConfirmRetry;
                     }
-                    OnExceptionHandler(originalRequest, "Processing the request Timed Out!", exceptionAction);
+                    OnExceptionHandler(originalRequest, "Processing the request Timed Out!", exceptionAction, callback);
                     break;
             }
         }
