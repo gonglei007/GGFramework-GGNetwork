@@ -160,19 +160,27 @@ namespace GGFramework.GGNetwork.HTTPDNS
         /// 如果有IP缓存，就把url的host转成ip返回。
         /// 如果没有IP缓存，就直接返回原url。
         /// </summary>
-        /// <param name="url"></param>
+        /// <param name="urlOrDomain"></param>
         /// <returns></returns>
-        public string GetURLByIP(string url) {
+        public string GetURLByIP(string urlOrDomain) {
             if (!this.on) {
-                return url;
+                return urlOrDomain;
             }
-            string newUrl = url;
-            Uri uri = new Uri(url);
-            if (hostMap.ContainsKey(uri.Host)) {
-                Cache cache = hostMap[uri.Host];
-                newUrl = ReplaceHost(url, cache.ip);
+            string result = urlOrDomain;
+            string domain = null;
+            if (Uri.CheckHostName(urlOrDomain) != UriHostNameType.Unknown)
+            {
+                domain = urlOrDomain;
             }
-            return newUrl;
+            else {
+                Uri uri = new Uri(urlOrDomain);
+                domain = uri.Host;
+            }
+            if (hostMap.ContainsKey(domain)) {
+                Cache cache = hostMap[domain];
+                result = ReplaceHost(urlOrDomain, cache.ip);
+            }
+            return result;
         }
 
         /// <summary>
