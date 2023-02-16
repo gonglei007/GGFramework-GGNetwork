@@ -35,7 +35,7 @@ public class EagleEye
     /// 控制网络诊断频率的字典，Key是网络地址信息，value是上一次触发的时间戳（单位秒）
     /// </summary>
     static Dictionary<string, long> TestFrequencyControlDict = new Dictionary<string, long>();
-    static bool On = false;
+    static public bool On = false;
 
     public class ReportParamData
     {

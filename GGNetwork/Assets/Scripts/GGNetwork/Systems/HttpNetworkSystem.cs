@@ -322,17 +322,17 @@ namespace GGFramework.GGNetwork
                     //TODO: GL - 先测试出来，那些情况会有非超时类的异常。超时类的异常本身时间比较长，所以不用自动重试。非超时类的异常如果比较频繁，再处理定时重试的功能。
                     //CommonTools.SetTimeout(2.0f, () => {
                     //});
-                    uiAdaptor.ShowDialog("server_error", message, true, (bool retry) => {
+                    uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) => {
                         DoSendRequest(originalRequest);
                     });
                     break;
                 case ExceptionAction.ConfirmRetry:
-                    uiAdaptor.ShowDialog("server_error", message, true, (bool retry) => {
+                    uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) => {
                         DoSendRequest(originalRequest);
                     });
                     break;
                 case ExceptionAction.Tips:
-                    uiAdaptor.ShowDialog("server_error", message, false, (bool retry) => {
+                    uiAdaptor.ShowDialog("server_warning", message, false, (bool retry) => {
                         //TODO: 通过uiAdaptor.ShowInfo(Type[tip/dialog])来展示信息。
                         Debug.LogFormat("[http-error]只告知异常:{0}", originalRequest.GetUri().ToString());
                     });
@@ -385,6 +385,7 @@ namespace GGFramework.GGNetwork
                     // 如果没有成功，就说明是服务器返回的报错。
                     if (response.IsSuccess())
                     {
+                        Debug.Log("Success!");
                         Debug.LogFormat("({0}) Request. \n Response:\nstatus{1}\ndata:{2}",
                             originalRequest.GetCurrentUri().ToString(),
                             response.GetStatusCode().ToString(),
@@ -434,11 +435,12 @@ namespace GGFramework.GGNetwork
                     }
                     else
                     {
+                        Debug.LogWarning("Not Success!");
                         // HTTP协议层报错，也要弹框告知前端。
-						param["statusCode"] = response.GetStatusCode();
+                        param["statusCode"] = response.GetStatusCode();
 						param["message"] = response.GetMessage();
 						param["dataAsText"] = response.GetData();
-						logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
+                        logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
                         Debug.LogError(string.Format("Request finished Successfully, but the server sent an error. Status Code: {0}-{1} Message: {2}",
                                                         response.GetStatusCode(),
                                                         response.GetMessage(),
@@ -446,7 +448,9 @@ namespace GGFramework.GGNetwork
                         if (response.GetStatusCode() != NetworkConst.CODE_OK)
                         {
                             TriggerResponseError(response.GetStatusCode());
-                            OnExceptionHandler(originalRequest, string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.GetStatusCode().ToString(), response.GetMessage(), response.GetData()), exceptionAction, callback);
+                            string errorMessage = string.Format("Error Status Code:\n{0};\n{1};\n{2}.", response.GetStatusCode().ToString(), response.GetMessage(), response.GetData());
+                            Debug.LogError(errorMessage);
+                            OnExceptionHandler(originalRequest, "server_error", exceptionAction, callback);
                         }
                         //OnExceptionHandler(originalRequest, TextSystem.GetText("Error Status Code:\n{0};\n{1};\n{2}.", response.StatusCode.ToString(), response.Message, response.DataAsText), ExceptionAction.Tips);
                         //因为后端判断有严重异常，所以处理异常后不要再继续调callback了。
@@ -456,8 +460,9 @@ namespace GGFramework.GGNetwork
                 // The request finished with an unexpected error. The request's Exception property may contain more info about the error.
                 case HTTPRequest.States.Error:
                     string ExceptionMessage = originalRequest.GetExceptionMessage();
+                    Debug.LogError(ExceptionMessage);
 					logAdaptor.PostError(originalRequest.GetCurrentUri().Host, param);
-                    OnExceptionHandler(originalRequest, ExceptionMessage, exceptionAction, callback);
+                    OnExceptionHandler(originalRequest, "server_error", exceptionAction, callback);
                     break;
 
                 // The request aborted, initiated by the user.

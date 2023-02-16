@@ -229,11 +229,11 @@ namespace GGFramework.GGNetwork
                             {
                                 if (request.data.ContainsKey("msg"))
                                 {
-                                    uiAdaptor.ShowDialog("server_error", request.data["msg"].ToString(), true, null);
+                                    uiAdaptor.ShowDialog("server_warning", request.data["msg"].ToString(), true, null);
                                 }
                                 else
                                 {
-                                    uiAdaptor.ShowDialog("server_error", "null", true, null);
+                                    uiAdaptor.ShowDialog("server_warning", "null", true, null);
                                 }
                             }
                             else if (code != NetworkConst.CODE_FA_REPEAT_MSG &&  // 不是重复消息
@@ -245,7 +245,7 @@ namespace GGFramework.GGNetwork
                         else
                         {
                             GameDebugger.sPushLog("Invalid response data!!!" + request.data.ToString());
-                            uiAdaptor.ShowDialog("server_error", "server_error", true, null);
+                            uiAdaptor.ShowDialog("server_warning", "server_error", true, null);
                         }
                     }
                     catch (Exception e)
