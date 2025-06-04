@@ -3,6 +3,13 @@
     <p align="center">
         一个更适用于游戏客户端的网络框架
     </p>
+  <p align="center">
+      <a href="https://github.com/gonglei007/GameDevMind/watchers" target="_blank"><img src="https://img.shields.io/github/watchers/gonglei007/GameDevMind.svg" style="display: inherit;"/></a>
+      <a href="https://github.com/gonglei007/GameDevMind/stargazers" target="_blank"><img src="https://img.shields.io/github/stars/gonglei007/GameDevMind.svg" style="display: inherit;"/></a>
+      <a href="https://github.com/gonglei007/GameDevMind/network/members" target="_blank"><img src="https://img.shields.io/github/forks/gonglei007/GameDevMind.svg" style="display: inherit;"/></a>
+      <img src="https://img.shields.io/github/repo-size/gonglei007/GameDevMind.svg" style="display: inherit;"/>
+      <a href="https://github.com/gonglei007/GameDevMind/graphs/contributors" target="_blank"><img src="https://img.shields.io/github/contributors/gonglei007/GameDevMind.svg" style="display: inherit;"/></a>
+  </p>
 </p>
 
 ![GGNetwork](documents/exports/GGNetwork_TDD.png?raw=true)
