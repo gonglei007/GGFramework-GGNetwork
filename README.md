@@ -1,8 +1,5 @@
 <p align="center">
     <h1 align="center">GGNetwork (内测版)</h1>
-    <p align="center">
-        一个更适用于游戏客户端的网络框架
-    </p>
   <p align="center">
       <a href="https://github.com/gonglei007/GGFramework-GGNetwork/watchers" target="_blank"><img src="https://img.shields.io/github/watchers/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
       <a href="https://github.com/gonglei007/GGFramework-GGNetwork/stargazers" target="_blank"><img src="https://img.shields.io/github/stars/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
@@ -10,6 +7,9 @@
       <img src="https://img.shields.io/github/repo-size/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/>
       <a href="https://github.com/gonglei007/GGFramework-GGNetwork/graphs/contributors" target="_blank"><img src="https://img.shields.io/github/contributors/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
   </p>
+    <p align="center">
+        一个更适用于游戏客户端的网络框架
+    </p>
 </p>
 
 ![GGNetwork](documents/exports/GGNetwork_TDD.png?raw=true)
