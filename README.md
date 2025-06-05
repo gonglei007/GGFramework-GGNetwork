@@ -72,7 +72,7 @@
 
 |    |    |
 | --- | ---- |
-| [小小三国2](https://sg2ad.gotechgames.com/) | 一款已经运营了8年的SLG手游。 |
+| [小小三国2](https://play.google.com/store/search?q=%E5%B0%8F%E5%B0%8F%E4%B8%89%E5%9B%BD2&c=apps) | 一款已经运营了8年的SLG手游。 |
 | 游戏化心理评测系统 | 上海某知名高校的游戏化心理评测项目。 |
 |    |    |
 
