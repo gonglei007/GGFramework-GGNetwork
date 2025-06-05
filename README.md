@@ -67,10 +67,9 @@
 | QQ群: | 242500383 | [![GLTOP游戏研发与技术1群](https://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=fy4Z65nE-5Jd1ay8FkJpDc9iPJyW3d38&jump_from=webapi) |
 |  |  | |
 
-### 版本说明
+## 应用案例
 当前版本的GGNetwork适用于实时性要求不高的SLG、休闲等类型的游戏。虽然是内测版本，但已经在商业项目中应用。
 
-*应用案例*
 |    |    |
 | --- | ---- |
 | [小小三国2](https://sg2ad.gotechgames.com/) | 一款已经运营了8年的SLG手游。 |
