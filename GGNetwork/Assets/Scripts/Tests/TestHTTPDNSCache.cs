@@ -3,90 +3,75 @@ using UnityEngine;
 using GGFramework.GGNetwork;
 using GGFramework.GGNetwork.HTTPDNS;
 
+/// <summary>
+/// Tests for HTTPDNSSystem.Cache lifecycle and timeout behavior.
+/// HTTPDNS factory/provider tests are in TestHTTPDNS.cs.
+/// </summary>
 public class TestHTTPDNSCache
 {
     [Test]
-    public void Test_Cache_TTLDefaultsTo60()
+    public void Test_Cache_Defaults()
     {
         var cache = new HTTPDNSSystem.Cache();
         Assert.That(cache.TTL, Is.EqualTo(60));
+        Assert.That(cache.domain, Is.Null);
+        Assert.That(cache.ip, Is.Null);
     }
 
     [Test]
-    public void Test_Cache_TTLClampedToMin()
-    {
-        var cache = new HTTPDNSSystem.Cache();
-
-        cache.TTL = 60;
-        Assert.That(cache.TTL, Is.EqualTo(60));
-
-        cache.TTL = 5;
-        Assert.That(cache.TTL, Is.EqualTo(5));
-
-        // Values <= 1 get clamped to MIN_TTL_SECOND (2)
-        cache.TTL = 1;
-        Assert.That(cache.TTL, Is.EqualTo(2));
-
-        cache.TTL = -1;
-        Assert.That(cache.TTL, Is.EqualTo(2));
-    }
-
-    [Test]
-    public void Test_Cache_UpdateTimeStartsAtZero()
+    public void Test_Cache_UpdateTimeStartsFresh()
     {
         var cache = new HTTPDNSSystem.Cache();
         cache.ResetUpdateTime();
         Assert.That(cache.UpdatedTime, Is.GreaterThanOrEqualTo(0));
-        Assert.That(cache.UpdatedTime, Is.LessThan(5));
+        Assert.That(cache.UpdatedTime, Is.LessThan(5), "Should be fresh (less than 5s)");
     }
 
     [Test]
-    public void Test_Cache_UpdatedTimeIncreases()
+    public void Test_Cache_MultipleResets()
     {
         var cache = new HTTPDNSSystem.Cache();
         cache.ResetUpdateTime();
-
-        // The UpdatedTime property calculates elapsed seconds since last update.
-        // After reset, it should be very close to 0.
-        int t0 = cache.UpdatedTime;
-        Assert.That(t0, Is.GreaterThanOrEqualTo(0));
-        Assert.That(t0, Is.LessThan(2));
+        cache.ResetUpdateTime();
+        Assert.That(cache.UpdatedTime, Is.GreaterThanOrEqualTo(0));
+        Assert.That(cache.UpdatedTime, Is.LessThan(2));
     }
 
     [Test]
-    public void Test_Cache_DomainProperty()
+    public void Test_Cache_TTLClampBoundary()
     {
         var cache = new HTTPDNSSystem.Cache();
-        cache.domain = "example.com";
-        Assert.That(cache.domain, Is.EqualTo("example.com"));
+
+        // Value 2 should be allowed (equals MIN_TTL_SECOND)
+        cache.TTL = 2;
+        Assert.That(cache.TTL, Is.EqualTo(2));
+
+        // Value 5 should pass through
+        cache.TTL = 5;
+        Assert.That(cache.TTL, Is.EqualTo(5));
+
+        // Value 1 should clamp to 2
+        cache.TTL = 1;
+        Assert.That(cache.TTL, Is.EqualTo(2));
+
+        // Negative should clamp to 2
+        cache.TTL = -5;
+        Assert.That(cache.TTL, Is.EqualTo(2));
+
+        // Large values pass through
+        cache.TTL = 3600;
+        Assert.That(cache.TTL, Is.EqualTo(3600));
     }
 
     [Test]
-    public void Test_Cache_IPProperty()
+    public void Test_Cache_IsExpiredLogic()
     {
+        // Cache expiration: UpdatedTime > TTL means cache needs refresh.
+        // A freshly reset cache should NOT be expired (UpdatedTime ~0, TTL >= 2).
         var cache = new HTTPDNSSystem.Cache();
-        cache.ip = "192.168.1.1";
-        Assert.That(cache.ip, Is.EqualTo("192.168.1.1"));
-    }
-
-    [Test]
-    public void Test_HTTPDNSSystem_ReplaceHost()
-    {
-        var system = HTTPDNSSystem.Instance;
-        system.ON = false;
-
-        // When off, GetURLByIP returns the original URL unchanged
-        string url = "http://example.com:8080/api/v1";
-        string result = system.GetURLByIP(url);
-        Assert.That(result, Is.EqualTo(url));
-    }
-
-    [Test]
-    public void Test_EStatus_Values()
-    {
-        Assert.That((int)HTTPDNSSystem.EStatus.RET_SUCCESS, Is.EqualTo(1000));
-        Assert.That((int)HTTPDNSSystem.EStatus.RET_NO_ON, Is.EqualTo(1001));
-        Assert.That((int)HTTPDNSSystem.EStatus.RET_NO_HOST, Is.EqualTo(1002));
-        Assert.That((int)HTTPDNSSystem.EStatus.RET_ERROR_RESULT, Is.EqualTo(1003));
+        cache.ResetUpdateTime();
+        cache.TTL = 60;
+        Assert.That(cache.UpdatedTime, Is.LessThan(cache.TTL),
+            "Fresh cache should not be expired");
     }
 }
