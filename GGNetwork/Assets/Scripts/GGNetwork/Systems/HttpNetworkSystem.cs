@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-//using BestHTTP;
 using System.Threading;
 using SimpleJson;
 using System.Text;
@@ -104,9 +103,9 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        HTTPFactory httpFactory = null;
+        IHTTPFactory httpFactory = null;
 
-        public HTTPFactory HTTPFactory
+        public IHTTPFactory HTTPFactory
         {
             get
             {
@@ -122,7 +121,7 @@ namespace GGFramework.GGNetwork
 
         public void Init<T>(T httpFactory)
         {
-            this.httpFactory = httpFactory as HTTPFactory;
+            this.httpFactory = httpFactory as IHTTPFactory;
         }
 
         /// <summary>
@@ -157,8 +156,6 @@ namespace GGFramework.GGNetwork
             }
             return serviceUrls[service];
         }
-
-        //public List<RequestItem> needRetryItems = new List<RequestItem>();
 
         private static string token = null;
 
@@ -294,24 +291,6 @@ namespace GGFramework.GGNetwork
         private void OnExceptionHandler(HTTPRequest originalRequest, string message, ExceptionAction exceptionAction, Action<JsonObject> callback)
         {
             //TODO: 可以考虑出错以后更改线路，以后再实现。
-            //if (exceptionAction == ExceptionAction.AutoRetry || exceptionAction == ExceptionAction.ConfirmRetry)
-            //{
-            //    string host = originalRequest.request.Uri.ToString();
-            //    ServiceCenter.Instance.HTTPDNS.parseIP(host, (string ip, HTTPDNS.EStatus status)=> {
-            //        if (status == HTTPDNS.EStatus.RET_SUCCESS)
-            //        {
-            //            Uri uri = new Uri(ip);
-            //            //originalRequest = new HTTPRequest(uri);
-            //        }
-            //        else {
-            //            message = string.Format("Can not parse URL({0})!", host);
-            //        }
-            //    });
-            //    //string serviceType = originalRequest.GetServiceType();
-            //    //ServiceCenter.Instance.RefereshServiceHost(serviceType, (string type, string host)=> {
-            //    //    SetServiceUrl(type, host);
-            //    //});
-            //}
             if (this.uiAdaptor == null) {
                 // 如果没有UIAdaptor,就不走重试流程，直接走提示，然后结束。
                 exceptionAction = ExceptionAction.Tips;
@@ -319,9 +298,7 @@ namespace GGFramework.GGNetwork
             switch (exceptionAction)
             {
                 case ExceptionAction.AutoRetry:
-                    //TODO: GL - 先测试出来，那些情况会有非超时类的异常。超时类的异常本身时间比较长，所以不用自动重试。非超时类的异常如果比较频繁，再处理定时重试的功能。
-                    //CommonTools.SetTimeout(2.0f, () => {
-                    //});
+                    //TODO: GL - 实现定时重试功能，避免立即无限尝试。
                     uiAdaptor.ShowDialog("server_warning", message, true, (bool retry) => {
                         DoSendRequest(originalRequest);
                     });
@@ -363,12 +340,6 @@ namespace GGFramework.GGNetwork
             //Debug.LogFormat(">>>>>>>>>>>>>>>>>请求返回, service type:{0}：", serviceType);
             uiAdaptor.ShowWaiting(false);
             // Everything went as expected!
-            //if (response == null)
-            //{
-            //    Debug.LogWarning("http response is null!");
-            //    OnExceptionHandler(originalRequest, string.Format("Http response is null!Fix it on server side!"), ExceptionAction.ConfirmRetry);
-            //    return;
-            //}
 
             JsonObject param = new JsonObject();
 			param["protocol"] = "http";
@@ -390,9 +361,6 @@ namespace GGFramework.GGNetwork
                             originalRequest.GetCurrentUri().ToString(),
                             response.GetStatusCode().ToString(),
                             response.GetData());
-                        //Debug.Log("http response:" + response.response.DataAsText.ToString());
-                        //Debug.Log("http response status:" + response.response.StatusCode.ToString());
-                        //Debug.Log("http response data:" + response.DataAsText);
 
                         if (response.GetStatusCode() != NetworkConst.CODE_OK)
                         {
@@ -503,7 +471,6 @@ namespace GGFramework.GGNetwork
                 throw new Exception(string.Format("Illegal service URL!!!service:{0}", service));
             }
             HTTPRequest request = PostWebRequest(url, command, jsonParams, exceptionAction, callback);
-            //request.SetServiceType(service);
         }
 
         /// <summary>
@@ -566,35 +533,6 @@ namespace GGFramework.GGNetwork
         }
 
         /// <summary>
-        /// 重复发送http请求(按照斐波那契数列)
-        /// </summary>
-        /// <param name="deltaTime"></param>
-        //public void LoopRequest(float deltaTime)
-        //{
-        //    for (int i = 0; i < needRetryItems.Count; i++)
-        //    {
-        //        needRetryItems[i].retryTime -= deltaTime;
-        //        if (needRetryItems[i].retryTime <= 0.0f)
-        //        {
-        //            //NetworkWaitingMask.ShowMask(false, "httpMask");
-        //            needRetryItems[i].retryNum = (needRetryItems[i].retryNum + 1) % 5;
-        //            //int tempIndex = (needRetryItems[i].retryNum % 5) + 1;// + 1是因为斐波那契数列没有0的选项
-        //            int tempIndex = needRetryItems[i].retryNum;
-        //            needRetryItems[i].retryTime = GetWaitTime(tempIndex);
-        //            //needRetryItems[i].retryNum++;
-        //            if (needRetryItems[i].retryNum % 5 == 0)
-        //            {
-        //                windowRequest = true;
-        //            }
-        //            else
-        //            {
-        //                //HttpThread.Instance.AddWebRequest(needRetryItems[i]);
-        //            }
-        //        }
-        //    }
-        //}
-
-        /// <summary>
         /// 处理收到的响应数据。
         /// </summary>
         /// <returns></returns>
@@ -648,12 +586,6 @@ namespace GGFramework.GGNetwork
             finally
             {
                 callback(exp, code, responseObj);
-                //return responseObj;
-                //// 发生异常情况就不进行回调了。
-                //if (responseObj != null)
-                //{
-                //    callback(responseObj);
-                //}
             }
         }
 
@@ -700,18 +632,6 @@ namespace GGFramework.GGNetwork
                 index = waitTimes.Length - 1;
             }
             return waitTimes[index];
-        }
-
-
-        public void Update()
-        {
-            //if (needRetryItems != null && needRetryItems.Count > 0)
-            //{
-            //    if (!windowRequest)
-            //    {
-            //        LoopRequest(Time.deltaTime);
-            //    }
-            //}
         }
     }
 }

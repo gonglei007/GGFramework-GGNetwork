@@ -24,7 +24,7 @@ namespace GGFramework.GGNetwork
         ERROR
     }
 
-    public class IClient
+    public abstract class BaseNetworkClient
     {
         public static int ConnectTimeout = 8;
         public static int RequestTimeout = 10;
@@ -81,35 +81,30 @@ namespace GGFramework.GGNetwork
         private ConcurrentQueue<NetworkRequest> responseQueue = new ConcurrentQueue<NetworkRequest>();
 
         private uint reconnectCounter = 0;
+        private bool isReconnecting = false;
 
-        public IClient(string name) {
+        public BaseNetworkClient(string name) {
             this.name = name;
         }
 
 
-        protected virtual bool IsClientConnected() { return false; }
+        protected abstract bool IsClientConnected();
 
-        protected virtual void initClient()
-        {
-            uiAdaptor.ShowWaiting(true);
-        }
+        protected abstract void initClient();
 
         /// <summary>
         /// 内部连接接口。要在子类实现。
         /// </summary>
-        protected virtual bool InnerConnect()
-        {
-            return false;
-        }
+        protected abstract bool InnerConnect();
 
-        protected virtual void InnerRequest(string route, JsonObject msg, Action<JsonObject> callback) { }
+        protected abstract void InnerRequest(string route, JsonObject msg, Action<JsonObject> callback);
 
         protected IEnumerator delayConnect(float delay)
         {
-            //Debug.Log("延时:"+delay.ToString());
             yield return new WaitForSeconds(delay);
             Debug.LogFormat("...{0}秒|开始第{1}次尝试重连！", delay, reconnectCounter);
             this.initClient();
+            isReconnecting = false;
         }
 
         /// <summary>
@@ -371,7 +366,7 @@ namespace GGFramework.GGNetwork
                     bool connected = false;
                     try
                     {
-                        InnerConnect();
+                        connected = InnerConnect();
                     }
                     catch (Exception e)
                     {
@@ -418,20 +413,27 @@ namespace GGFramework.GGNetwork
                     param["error"] = errorMessage;
                     onError(param);
                 }
+                // 如果已经在重连中，避免重复启动
+                if (isReconnecting)
+                {
+                    Debug.LogWarning("Already reconnecting, skip duplicate attempt.");
+                    return;
+                }
                 // 如果是后台尝试或者没有UI弹框，则自动重连。
                 if (background || uiAdaptor.onDialog == null)
                 {
-                    // （持续）延时连接
+                    isReconnecting = true;
                     CoroutineUtil.DoCoroutine(delayConnect(ReconnectionDelay));
                 }
                 else
                 {
                     if (reconnectCounter >= AutoReconnectTimes)
                     {
+                        isReconnecting = true;
                         uiAdaptor.ShowDialog("ws_network_error", errorMessage, true, (bool retry) =>
                         {
-                            // 不管点什么都重试
                             Debug.Log("[有UI]手动重连!");
+                            isReconnecting = true;
                             CoroutineUtil.DoCoroutine(delayConnect(0.0f));
                         });
                         reconnectCounter = 0;
@@ -439,13 +441,10 @@ namespace GGFramework.GGNetwork
                     else
                     {
                         reconnectCounter++;
+                        isReconnecting = true;
                         CoroutineUtil.DoCoroutine(delayConnect(ReconnectionDelay));
                     }
                 }
-            }
-            else
-            {
-                // do nothing
             }
         }
 
@@ -460,15 +459,6 @@ namespace GGFramework.GGNetwork
             {
                 onRequestError(request);
             }
-            //if (onDialog != null)
-            //{
-            //    onDialog(TextSystem.GetText("request-error"), request.errorMessage, true, (bool retry) => {
-            //        if (opening) {
-            //            // 延迟N秒
-            //            CoroutineUtil.DoCoroutine(delayDoSendRequest(request, 1.0f));
-            //        }
-            //    });
-            //}
         }
     }
 }

@@ -24,7 +24,7 @@ namespace GGFramework.GGNetwork
             public string host;
             public int port;
         }
-        private Dictionary<string, IClient> clientMap = new Dictionary<string, IClient>();
+        private Dictionary<string, BaseNetworkClient> clientMap = new Dictionary<string, BaseNetworkClient>();
         private Dictionary<string, ServiceInfo> serviceInfoMap = new Dictionary<string, ServiceInfo>();
 
         public NetworkSystem()
@@ -66,51 +66,14 @@ namespace GGFramework.GGNetwork
         /// <param name="name">服务名称</param>
         /// <param name="bindUI">是否有UI响应</param>
         /// <returns></returns>
-        public IClient CreateNetworkClient(string name, bool bindUI)
+        public BaseNetworkClient CreateNetworkClient(string name, bool bindUI)
         {
-            IClient client = new PomeloNetworkClient(name);
-            //if (bindUI)
-            //{
-            //    client.onError = (JsonObject param) => {
-            //    };
-            //    client.onDialog = (string title, string message, bool retry, Action<bool> callback) => {
-            //        if (Global.Mode == Global.Modes.Debug)
-            //        {
-            //            callback(true);
-            //            return;
-            //        }
-            //        if (UISystem.Instance == null)
-            //        {
-            //            callback(true);
-            //            return;
-            //        }
-            //        UISystem.Instance.PopDialog(title, message, (int)UIDialog.Option.Yes, (UIDialog.Option option) => {
-            //            //TODO: GL - 根据异常响应类型，决定做出哪种回调。
-            //            if (option == UIDialog.Option.Yes)
-            //            {
-            //                // 重试
-            //                callback(retry);
-            //            }
-            //            else
-            //            {
-            //                // 忽略
-            //                callback(retry);
-            //            }
-            //        });
-            //    };
-            //    client.onWaiting = (bool show) => {
-            //        if (UISystem.Instance == null)
-            //        {
-            //            return;
-            //        }
-            //        UISystem.Instance.ShowWaiting(show);
-            //    };
-            //}
+            BaseNetworkClient client = new PomeloNetworkClient(name);
             clientMap[name] = client;
             return client;
         }
 
-        public IClient GetNetworkClient(string name)
+        public BaseNetworkClient GetNetworkClient(string name)
         {
             if (!clientMap.ContainsKey(name))
             {
@@ -123,7 +86,7 @@ namespace GGFramework.GGNetwork
         {
             foreach (var item in clientMap)
             {
-                IClient client = item.Value;
+                BaseNetworkClient client = item.Value;
                 client.Close();
             }
         }
@@ -132,7 +95,7 @@ namespace GGFramework.GGNetwork
         {
             if (clientMap.ContainsKey(name))
             {
-                IClient client = clientMap[name];
+                BaseNetworkClient client = clientMap[name];
                 client.Close();
             }
         }
@@ -141,7 +104,7 @@ namespace GGFramework.GGNetwork
         {
             if (clientMap.ContainsKey(name))
             {
-                IClient client = clientMap[name];
+                BaseNetworkClient client = clientMap[name];
                 client.Disconnect();
             }
         }
@@ -150,15 +113,14 @@ namespace GGFramework.GGNetwork
         {
             foreach (var item in clientMap)
             {
-                IClient client = item.Value;
+                BaseNetworkClient client = item.Value;
                 client.Update();
             }
         }
 
-        public IClient ConnectNetworkClient(string name, string host, int port, Action<JsonObject> callback)
+        public BaseNetworkClient ConnectNetworkClient(string name, string host, int port, Action<JsonObject> callback)
         {
-            IClient client = GetNetworkClient(name);
-            //client.client.disposed = false;
+            BaseNetworkClient client = GetNetworkClient(name);
             if (client == null)
             {
                 return null;
@@ -189,7 +151,7 @@ namespace GGFramework.GGNetwork
 
         public void SendRequest(string name, string route, JsonObject message, Action<JsonObject> response)
         {
-            IClient client = GetNetworkClient(name);
+            BaseNetworkClient client = GetNetworkClient(name);
             if (client == null)
             {
                 return;
@@ -218,8 +180,7 @@ namespace GGFramework.GGNetwork
 
         public void Dispose()
         {
-            return;
-            //CloseAll();
+            CloseAll();
         }
     }
 }

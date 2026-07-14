@@ -15,7 +15,7 @@ namespace GGFramework.GGNetwork
 
         public const string ERROR_MESSAGE = "network_error";
 
-        public static string httpSecretKey = null;
+        public static string httpSecretKey { get; private set; }
         public static string deviceUID = null;
         public static string channel = null;
         public static string clientVersion = null;

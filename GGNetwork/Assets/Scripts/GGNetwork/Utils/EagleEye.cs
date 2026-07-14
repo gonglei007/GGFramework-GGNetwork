@@ -15,8 +15,8 @@ using UnityEngine;
  */
 public class EagleEye
 {
-    const string TASK_ID = "725373878";
-    const string KEY = "AC5c9596842898e2";
+    static string KEY = "AC5c9596842898e2";
+    static string TASK_ID = "725373878";
     const string HOST = "http://www.asia-beta.com";
     const string GET_TEST_URI = "/edge_api/v2/get_test_url";
     const string GET_TEST_PARAM = "?task_id={0}&authts={1}&token={2}&scene=app";
@@ -94,6 +94,12 @@ public class EagleEye
     /// 调用初始化之后才打开功能。
     /// </summary>
     static public void Init() {
+        EagleEye.On = true;
+    }
+
+    static public void Init(string taskId, string key) {
+        TASK_ID = taskId;
+        KEY = key;
         EagleEye.On = true;
     }
 
@@ -233,7 +239,7 @@ public class EagleEye
 
                 //再次使用 URL 发送一次 HEAD 请求，参数为 n=2(防止缓存情况)
                 string t2URL = $"{url}?n=2";
-                HTTPRequest t2Request = new HTTPRequest(new Uri(t1URL), HTTPMethods.Head, (req2, resp2) =>
+                HTTPRequest t2Request = new HTTPRequest(new Uri(t2URL), HTTPMethods.Head, (req2, resp2) =>
                 {
                     //这里只管请求成功的情况，失败就中断好了
                     if (req2.State == HTTPRequestStates.Finished && resp2.IsSuccess)

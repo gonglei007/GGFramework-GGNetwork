@@ -11,15 +11,10 @@ namespace GGFramework.GGNetwork
      */
     public class NetworkTest
     {
-        //private const double TEST_OUTTIME = 1500;
-        //private const double TEST_DURATION = 20;
         private const float TEST_OUTTIME = 0.8f;
 
         private static string[] addressList = null;
         private static Dictionary<string, UnityEngine.Ping> pingTable = null;
-        //private static double testTimer = 0;
-        //private static Timer timer = null;
-        //private static bool sDirectly = false;
         private static string foundUrl = null;
         private static Action<string> finishCallback = null;
         private static float uTimer = 0.0f;
@@ -42,14 +37,6 @@ namespace GGFramework.GGNetwork
                     LookupAddress();
                 }
             }
-            /*
-        if (!sDirectly) {
-            if (finishCallback != null) {
-                finishCallback(foundUrl);
-                finishCallback = null;
-            }
-        }
-             */
         }
 
         static void OnTimeOut()
@@ -57,41 +44,17 @@ namespace GGFramework.GGNetwork
             start = false;
             uTimer = 0.0f;
             StopPings();
-            /*
-            timer.Stop();
-            timer = null;
-             */
             if (addressList.Length <= 0)
             {
                 // 傳入的地址列表有問題。
                 GameDebugger.Instance.PushLog("addreslist is empty!");
                 foundUrl = null;
-                /*
-                if (directly)
-                {
-                    callback(foundUrl);
-                }
-                else
-                {
-                    finishCallback = callback;
-                }
-                 */
             }
             else
             {
-                // 都沒有返回結果，給第一個地址
+                // 都没有返回结果，给第一个地址
                 GameDebugger.Instance.PushLogFormat("Network speed test timeout! Use the default url:{0}", addressList[0]);
                 foundUrl = addressList[0];
-                /*
-                if (directly)
-                {
-                    callback(foundUrl);
-                }
-                else
-                {
-                    finishCallback = callback;
-                }
-                 */
             }
             finishCallback(foundUrl);
             foundUrl = null;
@@ -110,7 +73,7 @@ namespace GGFramework.GGNetwork
                     break;
                 }
             }
-            // 如果找到了就停止檢測了。
+            // 如果找到了就停止检测了。
             if (foundUrl != null)
             {
                 start = false;
@@ -118,18 +81,6 @@ namespace GGFramework.GGNetwork
                 StopPings();
                 finishCallback(foundUrl);
                 foundUrl = null;
-                /*
-                timer.Stop();
-                timer = null;
-                if (directly)
-                {
-                    callback(foundUrl);
-                }
-                else
-                {
-                    finishCallback = callback;
-                }
-                */
             }
         }
 
@@ -144,11 +95,7 @@ namespace GGFramework.GGNetwork
             NetworkTest.addressList = addressList;
             finishCallback = callback;
             pingTable = new Dictionary<string, UnityEngine.Ping>();
-            /*
-            sDirectly = directly;
-            timer = new Timer(TEST_DURATION);
-             */
-            // 準備Ping
+            // 准备Ping
             foreach (string url in addressList)
             {
                 string host = NetworkUtil.GetHostFromUrl(url);
@@ -156,22 +103,6 @@ namespace GGFramework.GGNetwork
                 Ping ping = new UnityEngine.Ping(ip);
                 pingTable[url] = ping;
             }
-            /*
-            timer.AutoReset = true;
-            timer.Start();
-            timer.Elapsed += (System.Object source, ElapsedEventArgs e) =>
-            {
-                testTimer += timer.Interval;
-                // 如果超時了，就按如下邏輯處理。
-                if (testTimer > TEST_OUTTIME)
-                {
-                    OnTimeOut(addressList, callback, directly);
-                }
-                else {
-                    LookupAddress(callback, directly);
-                }
-            };
-             */
         }
 
         /**

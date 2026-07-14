@@ -78,9 +78,14 @@ namespace GGFramework.GGNetwork
 
         private Queue<RequestItem> m_DownLoads = new Queue<RequestItem>();
 
+        public static bool IgnoreSSLErrors = false;
+
         public DownloadSystem()
         {
-            ServicePointManager.ServerCertificateValidationCallback = (s, cert, chain, ssl) => true;
+            if (IgnoreSSLErrors)
+            {
+                ServicePointManager.ServerCertificateValidationCallback = (s, cert, chain, ssl) => true;
+            }
         }
 
         public void Awake()
@@ -90,22 +95,11 @@ namespace GGFramework.GGNetwork
 
         public void Update()
         {
-            //if (m_DownLoads.Count > 0)
-            //{
-            //    if (!DownlaodFile._Instance.IsDownLoadLimit)
-            //    {
-            //        RequestItem item = m_DownLoads.Dequeue();
-            //        DownlaodFile._Instance.StartDownLoad(item.Url, item.SavePath, item.Progress, item.Total, item.Complete);
-            //    }
-            //}
             if (callbackQueue.Count > 0)
             {
                 callbackQueue.Dequeue().DoCallback();
             }
         }
-
-        //public void DoDownload(HTTPRequest request) {
-        //}
 
         public BestHTTP.HTTPRequest RequestDownload(string url, string downloadPath, Action<float> progress, Action<int> total, Action<string> complete)
         {
@@ -138,22 +132,11 @@ namespace GGFramework.GGNetwork
         }
 
         /// <summary>
-        /// 添加下载任务
-        /// </summary>
-        /// <param name="item"></param>
-        //public DownloadSystem.RequestItem RequestDownload(string url, string downloadPath, Action<float> progress, Action<int> total, Action<string> complete)
-        //{
-        //    DownloadSystem.RequestItem item = new DownloadSystem.RequestItem(url, downloadPath, progress, total, complete);
-        //    m_DownLoads.Enqueue(item);
-        //    return item;
-        //}
-
         /// <summary>
         /// 清除所有下载任务
         /// </summary>
         public void ClearDownLoad()
         {
-            //DownlaodFile._Instance.ClearData();
         }
 
         private IEnumerator DelayDownload(BestHTTP.HTTPRequest request, float delay)
@@ -281,21 +264,8 @@ namespace GGFramework.GGNetwork
         private void OnExceptionHandler(BestHTTP.HTTPRequest originalRequest, string downloadPath, string message)
         {
             Debug.LogError("Download exception:" + message + "\n" + originalRequest.Uri.ToString());
-            //Debug.LogWarning("thread id-"+System.Threading.Thread.CurrentThread.ManagedThreadId);
             System.IO.File.Delete(downloadPath);
             CoroutineUtil.DoCoroutine(DelayDownload(originalRequest, 3.0f));
-
-            //if (exceptionAction == ExceptionAction.AutoRetry || exceptionAction == ExceptionAction.ConfirmRetry)
-            //{
-            //    string serviceType = originalRequest.GetServiceType();
-            //    RefereshServiceHost(serviceType);
-            //}
-            //if (onDialog != null)
-            //{
-            //    onDialog(TextSystem.GetText("download-error"), message, true, (bool retry) => {
-            //        HTTPManager.SendRequest(originalRequest);
-            //    });
-            //}
         }
     }
 

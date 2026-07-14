@@ -26,7 +26,7 @@ namespace GGFramework.GGTask
         {
             thread = new Thread(() => {
                 if (true)
-                {// (_terminate.WaitOne(TaskSystem.TaskTimeout)) {
+                {
                     threadStart();
                     if (onFinish != null)
                     {
@@ -49,9 +49,7 @@ namespace GGFramework.GGTask
         {
             if (thread != null)
             {
-                //_terminate.Set();
                 thread.Interrupt();
-                //thread.Join(TaskSystem.TaskTimeout);
                 thread = null;
             }
         }
@@ -63,16 +61,7 @@ namespace GGFramework.GGTask
     public class TaskSystem : Singleton<TaskSystem>
     {
         public static int TaskTimeout = 30000;
-        /*
-        public class Task {
 
-            public Thread thread = null;
-            public Task(ThreadStart threadStart) {
-                thread = new Thread(threadStart);
-            }
-        }
-        private Dictionary<string, Task> tasks = new Dictionary<string, Task>();
-        */
         public int TaskNumber
         {
             get
@@ -83,33 +72,31 @@ namespace GGFramework.GGTask
 #if DotNet40
         private ConcurrentQueue<Task> InnerTaskQueue = new ConcurrentQueue<Task>();
 #else
-    private Queue<GTask> InnerTaskQueue = new Queue<GTask>();
-    private Thread rootThread;
+        private Queue<GTask> InnerTaskQueue = new Queue<GTask>();
+        private Thread rootThread;
 #endif
-        private bool IsJobRunning;
+        private readonly object jobLock = new object();
+        private bool isJobRunning;
 
         public void Init()
         {
 #if DotNet40
             Task.Factory.StartNew(ProcessJobs);
 #else
-        rootThread = new Thread(ProcessJobs);
-        rootThread.Start();
+            rootThread = new Thread(ProcessJobs);
+            rootThread.Start();
 #endif
         }
 #if DotNet40
         /// <summary>
-        /// 任务耗时检测,如果一个任务耗时超过5秒(暂定5秒)就返回false
+        /// 任务耗时检测
         /// </summary>
-        /// <param name="task"></param>
-        /// <returns></returns>
         public static async Task<bool> TimeTask(Task task)
         {
             if (await Task.WhenAny(task, Task.Delay(TaskTimeout)) == task)
             {
                 return true;
             }
-
             return false;
         }
 #endif
@@ -118,55 +105,61 @@ namespace GGFramework.GGTask
         {
 #if DotNet40
             var task = new Task<Type>(() => {
-                //Debug.Log("++++[Sub Thread]:");
                 return job();
             });
 #else
-        var task = new GTask(() =>
-        {
-            //Debug.Log("++++[Sub Thread]:");
-            job();
-        });
+            var task = new GTask(() =>
+            {
+                job();
+            });
 #endif
             InnerTaskQueue.Enqueue(task);
-            //Debug.LogWarning("任务进队列");
-            //return task;
         }
 
         private void ProcessJobs()
         {
             while (true)
             {
-                if (InnerTaskQueue.Count > 0 && !IsJobRunning)
+                if (InnerTaskQueue.Count > 0)
                 {
-                    //Debug.LogWarning("取出任务");
-#if DotNet40
-                    Task task = null;
-                    if (InnerTaskQueue.TryDequeue(out task))
+                    bool shouldStartJob = false;
+                    lock (jobLock)
                     {
-                        task.Start();
-                        IsJobRunning = true;
-                        Task<bool> taskWait = TimeTask(task);
-                        if (taskWait.Result)
+                        if (!isJobRunning)
                         {
-                            task.ContinueWith(t => IsJobRunning = false);
-                        }
-                        else
-                        {
-                            task.Dispose();
-                            IsJobRunning = false;
+                            isJobRunning = true;
+                            shouldStartJob = true;
                         }
                     }
+                    if (shouldStartJob)
+                    {
+#if DotNet40
+                        Task task = null;
+                        if (InnerTaskQueue.TryDequeue(out task))
+                        {
+                            task.Start();
+                            Task<bool> taskWait = TimeTask(task);
+                            if (taskWait.Result)
+                            {
+                                task.ContinueWith(t => { lock (jobLock) { isJobRunning = false; } });
+                            }
+                            else
+                            {
+                                task.Dispose();
+                                lock (jobLock) { isJobRunning = false; }
+                            }
+                        }
 #else
-                GTask task = InnerTaskQueue.Dequeue();
-                if (task != null) {
-                    task.Start(()=> {
-                        task.Dispose();
-                        IsJobRunning = false;
-                    });
-                    IsJobRunning = true;
-                }
+                        GTask task = InnerTaskQueue.Dequeue();
+                        if (task != null)
+                        {
+                            task.Start(() => {
+                                task.Dispose();
+                                lock (jobLock) { isJobRunning = false; }
+                            });
+                        }
 #endif
+                    }
                 }
                 else
                 {
@@ -182,47 +175,10 @@ namespace GGFramework.GGTask
 
         void OnDestroy()
         {
-            //Stop all thread
-            //thread.Abort();
-#if DotNet40
-#else
-        rootThread.Abort();
-        rootThread = null;
+#if !DotNet40
+            rootThread.Abort();
+            rootThread = null;
 #endif
         }
-        /*
-        public void AddTask(string name, ThreadStart threadStart) {
-            if (string.IsNullOrEmpty(name)) {
-                return;
-            }
-            if (!tasks.ContainsKey(name)) {
-                tasks[name] = new Task(threadStart);
-            }
-        }
-
-        public Task GetTask(string name) {
-            if (!tasks.ContainsKey(name))
-            {
-                return null;
-            }
-            return tasks[name];
-        }
-
-        public void StartTask(string name) {
-            Task task = GetTask(name);
-            if (task != null) {
-                task.thread.Start();
-            }
-        }
-
-        public void StopTask(string name) {
-            Task task = GetTask(name);
-            if (task != null)
-            {
-                task.thread.Abort();
-            }
-        }
-        */
     }
 }
-

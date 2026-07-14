@@ -126,13 +126,7 @@ namespace GGFramework.GGNetwork.HTTPDNS
             //param["domain"] = domain;
             // Temp set timeout to short time.
             string domainParam = String.Join(",", domains);
-            int preConnectTimeout = ServiceCenter.HttpConnectTimeout;
-            int preRequestTimeout = ServiceCenter.HttpRequestTimeout;
-            ServiceCenter.HttpConnectTimeout = HTTP_TIMEOUT;
-            ServiceCenter.HttpRequestTimeout = HTTP_TIMEOUT;
             HttpNetworkSystem.Instance.GetWebRequest(HTTP_DNS_API_MULTI_QUERY, "?domain=" + domainParam, HttpNetworkSystem.ExceptionAction.Ignore, (JsonObject response) => {
-                ServiceCenter.HttpConnectTimeout = preConnectTimeout;
-                ServiceCenter.HttpRequestTimeout = preRequestTimeout;
                 if (response == null)
                 {
                     message = string.Format("Request http dns failed!-{0}", response.ToString());
