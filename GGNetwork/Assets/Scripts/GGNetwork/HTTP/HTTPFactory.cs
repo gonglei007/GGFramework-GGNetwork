@@ -2,7 +2,7 @@
 
 namespace GGFramework.GGNetwork
 {
-    public interface HTTPFactory
+    public interface IHTTPFactory
     {
         HTTPRequest CreateHTTPRequest(Uri uri);
         HTTPResponse CreateHTTPResponse();

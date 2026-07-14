@@ -13,12 +13,12 @@ namespace GGFramework.GGNetwork
     /// 处理连接。
     /// 处理请求。
     /// </summary>
-    public class PomeloNetworkClient : IClient
+    public class PomeloNetworkClient : BaseNetworkClient
     {
         /// <summary>
         /// 用户未注册
         /// </summary>
-        public PomeloClient client = new PomeloClient(IClient.ConnectTimeout * 1000);
+        public PomeloClient client = new PomeloClient(BaseNetworkClient.ConnectTimeout * 1000);
 
         private Action<JsonObject> onHandShaked = null;
 
@@ -41,9 +41,8 @@ namespace GGFramework.GGNetwork
             };
         }
 
-        protected bool IsClientConnected() {
-            bool connected = client.NetworkState != (Pomelo.DotNetClient.NetWorkState)NetWorkState.CONNECTED || client.NetworkState != (Pomelo.DotNetClient.NetWorkState)NetWorkState.CONNECTING;
-            return connected;
+        protected override bool IsClientConnected() {
+            return client.NetworkState == (Pomelo.DotNetClient.NetWorkState)NetWorkState.CONNECTED;
         }
 
         public virtual void Disconnect()
@@ -67,9 +66,9 @@ namespace GGFramework.GGNetwork
             });
         }
 
-        private void initClient()
+        protected override void initClient()
         {
-            base.initClient();
+            uiAdaptor.ShowWaiting(true);
             //Debug.LogFormat("[thread-{0}]准备启动连接任务！", Thread.CurrentThread.ManagedThreadId);
             TaskSystem.Instance.QueueJob(() =>
             {
@@ -78,11 +77,10 @@ namespace GGFramework.GGNetwork
                 return null;
             });
         }
-        private bool InnerConnect()
+        protected override bool InnerConnect()
         {
-            bool connected = base.InnerConnect();
             Debug.Log("开始握手");
-            connected = client.connect(null, (JsonObject handshakeResult) =>
+            return client.connect(null, (JsonObject handshakeResult) =>
             {
                 InnerEventTrigger(new NetworkEvent(
                     (object handshakeObj) =>
@@ -96,11 +94,9 @@ namespace GGFramework.GGNetwork
             return connected;
         }
 
-        private void InnerRequest(string route, JsonObject msg, Action<JsonObject> callback)
+        protected override void InnerRequest(string route, JsonObject msg, Action<JsonObject> callback)
         {
-            base.InnerRequest(route, msg, (JsonObject response)=> {
-                client.request(route, msg, callback);
-            });
+            client.request(route, msg, callback);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using GGFramework.GGNetwork;
 
-internal class BestHTTPFactory: HTTPFactory
+internal class BestHTTPFactory: IHTTPFactory
 {
     public HTTPRequest CreateHTTPRequest(Uri uri)
     {

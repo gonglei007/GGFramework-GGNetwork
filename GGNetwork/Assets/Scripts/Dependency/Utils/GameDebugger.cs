@@ -70,16 +70,6 @@ public class GameDebugger : Singleton<GameDebugger> {
 	public static bool		showLog = true;
     public static bool      showFPS = true;
 #endif
-    /*
-	private static GameDebugger instance;
-	public static GameDebugger Instance
-	{
-		get
-		{
-			return instance;
-		}
-	}
-    */
 
     /**
      * TODO: 具体的配置由外面传入。
@@ -136,31 +126,6 @@ public class GameDebugger : Singleton<GameDebugger> {
 	void OnGUI()
 	{
         return;
-		if (showLog)
-		{
-			GUI.Label(new Rect(10, 10, 640, 480), debugInfo, debugTextStyle);
-            /*
-            GameObject cameraWalker = GameObject.Find("CameraWalker");
-            GameObject cameraObject = GameObject.Find("MapCamera");
-            if (cameraObject != null && cameraWalker != null)
-            {
-                Camera camera3D = cameraObject.GetComponent(typeof(Camera)) as Camera;
-                if (camera3D != null) {
-                    string cameraInfo = string.Format("Camera->\n<color={0}>\t POS:{1}\n\t ROT:{2}</color> \nWalker->\n\t POS:{3}\n\t ROT:{4}",
-                        "#ff0000ff",
-                        camera3D.transform.localPosition.ToString(),
-                        camera3D.transform.localRotation.ToString(),
-                        cameraWalker.transform.localPosition.ToString(),
-                        cameraWalker.transform.localRotation.ToString()
-                        );
-                    GUI.Label(new Rect(Screen.width - 400, 10, 400, 400), cameraInfo, debugTextStyle);
-                }
-            }
-            else {
-                GUI.Label(new Rect(Screen.width - 200, 10, 200, 400), "Not found 3D Camera!!", debugTextStyle);
-            }
-            */
-		}
 	}
 
     public static void sPushLog(string info) {
@@ -188,10 +153,6 @@ public class GameDebugger : Singleton<GameDebugger> {
             }
             string[] infoList = debugInfoQueue.ToArray();
             debugInfo = "";
-            /*
-            for(int i=infoList.Length-1; i>=0; --i){
-                debugInfo += string.Format("{0}:{1}\n", (infoCounter -infoList.Length+1+i), infoList[i]);
-            } */
             for (int i = 0; i < infoList.Length; ++i)
             {
                 //debugInfo += string.Format("{0}:{1}\n", (infoCounter+i), infoList[i]);
