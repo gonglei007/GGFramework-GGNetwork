@@ -103,7 +103,7 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 
 ## 架构
 
-![GGNetwork 架构](documents/exports/GGNetwork_TDD.png)
+![GGNetwork 架构](documents/exports/GGNetwork_Architecture.png)
 
 ## 文档
 
