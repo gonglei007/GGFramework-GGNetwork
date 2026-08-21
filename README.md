@@ -117,15 +117,6 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 | --- | -------- | -------- |
 | QQ群: | 242500383 | [![GLTOP游戏研发与技术1群](https://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=fy4Z65nE-5Jd1ay8FkJpDc9iPJyW3d38&jump_from=webapi) |
 
-## 应用案例
-
-当前版本的 GGNetwork 适用于实时性要求不高的 SLG、休闲等类型的游戏。虽然是内测版本，但已经在商业项目中应用。
-
-| | |
-| --- | ---- |
-| [小小三国2](https://play.google.com/store/apps/details?id=com.gltop.wj.xxsg2.tw2) | 一款已经运营了 8 年的 SLG 手游。 |
-| 游戏化心理评测系统 | 上海某知名高校的游戏化心理评测项目。 |
-
 ## 依赖
 
 * **Best HTTP (Pro)** — 预置 HTTP 底层实现（位于 `Assets/LocalPackages`）
