@@ -7,10 +7,33 @@
     <img src="https://img.shields.io/github/repo-size/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/>
     <a href="https://github.com/gonglei007/GGFramework-GGNetwork/graphs/contributors" target="_blank"><img src="https://img.shields.io/github/contributors/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
   </p>
-  <p align="center">一个更适用于游戏客户端的网络框架</p>
+  <p align="center">面向游戏客户端的可插拔网络框架 —— 内置异常重试 / 断线重连 / HttpDNS / 异常上报，HTTP、Socket、域名解析底层均可自由替换。</p>
 </p>
 
-![GGNetwork](documents/exports/GGNetwork_TDD.png?raw=true)
+![GGNetwork](assets/images/GGNetwork_banner.png)
+
+## 快速开始
+
+复制框架与依赖目录到你的工程，初始化后即可发请求：
+
+```csharp
+using GGFramework.GGNetwork;
+
+// 1. 复制 GGNetwork/Assets/Scripts/GGNetwork/ 与 Dependency/ 到你的工程
+// 2. 初始化（启动时调用一次）
+NetworkConst.InitEx(secretKey: "your-key", deviceUID: SystemInfo.deviceUniqueIdentifier,
+    channel: "google-play", clientVersion: Application.version);
+GameNetworkSystem.Instance.Init();
+
+// 3. 发请求
+JsonObject param = new JsonObject();
+param["username"] = "player1";
+HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login",
+    param, HttpNetworkSystem.ExceptionAction.ConfirmRetry,
+    (JsonObject response) => Debug.Log(response.ToString()));
+```
+
+> 完整接入流程见 [如何快速接入?](/documents/quickstart.md) 与 [技术手册](/documents/manual.md)
 
 ## 简介
 
@@ -78,6 +101,10 @@
 | `HTTPDNSSystem` | 域名解析：本地缓存、TTL 定时刷新、按 IP 替换 host |
 | `ServiceCenter` | 网络服务中心：连接/请求超时参数、服务域名动态刷新 |
 
+## 架构
+
+![GGNetwork 架构](documents/exports/GGNetwork_TDD.png)
+
 ## 文档
 
 * [如何快速接入?](/documents/quickstart.md)
@@ -109,7 +136,7 @@
 
 * 整理代码，把 PomeloClient 充分剥离出来，作为可选插件
 * 更完整的 Demo 演示
-* 补齐 `RequestItem.cs` / `HTTPRequestAdapter.cs` 源码归档（当前仅存 .meta）
+* 补充架构分层示意图 (mermaid / SVG)
 
 ## 更多资料
 
