@@ -105,23 +105,53 @@ namespace GGFramework.GGNetwork
 
         IHTTPFactory httpFactory = null;
 
+        /// <summary>
+        /// HTTP 底层实现开关。
+        /// true（默认）= 基于 Unity 原生 UnityWebRequest 的内部实现（UnityWebRequestFactory）；
+        /// false = 使用外部 Best HTTP (Pro) 实现（BestHTTPFactory）。
+        /// </summary>
+        public static bool UseUnityWebRequest = true;
+
         public IHTTPFactory HTTPFactory
         {
             get
             {
+                if (httpFactory == null)
+                {
+                    return UseUnityWebRequest
+                        ? (IHTTPFactory)new UnityWebRequestFactory()
+                        : new BestHTTPFactory();
+                }
                 return httpFactory;
             }
         }
 
         public void Awake()
         {
-            //HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
-            BestHTTP.HTTPManager.Setup();
+            // 用 UnityWebRequest 时需要主线程调度器；用 Best HTTP 时需要初始化 HTTPManager。
+            if (UseUnityWebRequest)
+            {
+                HttpRequestDriver.EnsureInstance();
+            }
+            else
+            {
+                //HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
+                BestHTTP.HTTPManager.Setup();
+            }
         }
 
         public void Init<T>(T httpFactory)
         {
-            this.httpFactory = httpFactory as IHTTPFactory;
+            var factory = httpFactory as IHTTPFactory;
+            if (factory != null && !(factory is BestHTTPFactory))
+            {
+                this.httpFactory = factory;
+            }
+            else
+            {
+                // 未指定或显式传入 BestHTTPFactory 时，遵循 UseUnityWebRequest 开关。
+                this.httpFactory = null;
+            }
         }
 
         /// <summary>
