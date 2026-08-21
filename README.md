@@ -69,7 +69,7 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 **第三方支持**
 
 - 支持 **HTTP/HTTPS 连接**（已实现）：预置 `Best HTTP (Pro)` 作为底层；也可挂载自定义或其它第三方 HTTP 模块
-- 支持 **Socket / 长连接**（已实现，内测）：预置基于 WebSocket + Pomelo 协议的 `PomeloClient`；也可挂载自定义或其它第三方长连接模块
+- 支持 **Socket / 长连接**（已实现）：**内置**基于 WebSocket + Pomelo 协议的客户端（`GGFramework.GGNetwork.Socket.WebSocket`，传输层用 `ClientWebSocket`，应用层内化握手/心跳/请求-响应/推送路由）；可通过 `BaseNetworkClient` 挂载其它第三方长连接模块，并保留 TCP 版 `PomeloClient` 作为可切换回退（`NetworkSystem.UseWebSocket=false`）
 - 支持 **HttpDNS Provider 插拔**：预置橙域实现，工厂预留腾讯、阿里
 
 > **可插拔设计**：框架通过 `IHTTPFactory`（HTTP 底层）、`BaseNetworkClient`（长连接底层）、`UIAdaptor`/`LogAdaptor`（UI 与上报解耦）、`HTTPDNSFactory`（域名解析）等抽象接口，将各类底层实现与业务解耦，可自由替换或挂载第三方实现。
@@ -127,7 +127,7 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 | 依赖 | 性质 | 说明 / 获取方式 |
 | ---- | ---- | ---- |
 | **Best HTTP (Pro)** | 商业授权 | HTTP 底层。**需自行购买导入**，不进版本库，见下方"获取 Best HTTP (Pro)" |
-| **PomeloClient / UnityWebSocket** | 内置 | 长连接底层实现（`Assets/LocalPackages`） |
+| **PomeloClient / UnityWebSocket** | 内置（回退） | 长连接**默认已内置内部 WebSocket 实现**（`Scripts/GGNetwork/Socket/WebSocket`）；外部 TCP 版 `PomeloClient` 仅作可选回退底层（`Assets/LocalPackages`，`NetworkSystem.UseWebSocket=false` 时启用） |
 | **GGTask / Dependency** | 内置 | 多线程任务队列与通用工具程序集 |
 
 ### 获取 Best HTTP (Pro)
@@ -142,8 +142,8 @@ Best HTTP (Pro) 是付费商业插件，出于许可协议考虑**不随仓库�
 
 ## TODO-List
 
-* 整理代码，把 PomeloClient 充分剥离出来，作为可选插件
-* 更完整的 Demo 演示
+* ~~把 PomeloClient 充分剥离出来，作为可选插件~~（已实现：内置 WebSocket + Pomelo 内部实现 `GGFramework.GGNetwork.Socket.WebSocket`，已作为默认长连接底层；`NetworkSystem.UseWebSocket` 可回退 TCP）
+* 更完整的 Demo 演示（含 WebSocket 长连接联机示例）
 * 补充架构分层示意图 (mermaid / SVG)
 
 ## 更多资料
