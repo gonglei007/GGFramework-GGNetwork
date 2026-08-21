@@ -111,11 +111,16 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 * [技术手册](/documents/manual.md)
 * 参考文档(TODO)
 
-## 进群沟通
+## 交流反馈
 
-| | | |
-| --- | -------- | -------- |
-| QQ群: | 242500383 | [![GLTOP游戏研发与技术1群](https://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=fy4Z65nE-5Jd1ay8FkJpDc9iPJyW3d38&jump_from=webapi) |
+使用过程中遇到问题、有改进建议，或是想聊聊游戏客户端网络方面的经验，欢迎加入我们：
+
+| 渠道 | 说明 |
+| ---- | ---- |
+| **QQ 群** `242500383` | [![加入](https://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=fy4Z65nE-5Jd1ay8FkJpDc9iPJyW3d38&jump_from=webapi) 点击加入游戏研发与技术交流群，群内可即时反馈问题 |
+| **GitHub Issues** | 提交 bug / 功能建议，点右上角 [New Issue](https://github.com/gonglei007/GGFramework-GGNetwork/issues) |
+
+> 内测期间，你的每一个反馈都在帮助框架变得更好。
 
 ## 依赖
 
