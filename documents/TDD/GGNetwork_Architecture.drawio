@@ -98,10 +98,10 @@
         <mxCell id="impl_dns2" value="腾讯 / 阿里" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="600" y="720" width="100" height="50" as="geometry"/>
         </mxCell>
-        <mxCell id="impl_socket1" value="PomeloClient&#10;UnityWebSocket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;shadow=1;" vertex="1" parent="1">
+        <mxCell id="impl_socket1" value="内置 WebSocket+Pomelo&#10;（默认）内部实现" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="900" y="720" width="120" height="50" as="geometry"/>
         </mxCell>
-        <mxCell id="impl_socket2" value="自定义 / 其它" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;shadow=1;" vertex="1" parent="1">
+        <mxCell id="impl_socket2" value="TCP PomeloClient&#10;（回退）可选" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="1030" y="720" width="100" height="50" as="geometry"/>
         </mxCell>
 
