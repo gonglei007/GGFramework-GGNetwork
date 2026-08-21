@@ -124,9 +124,21 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 
 ## 依赖
 
-* **Best HTTP (Pro)** — HTTP 底层实现（**商业授权资产，不进版本库**，需自行购买导入后使用）
-* **PomeloClient / UnityWebSocket** — 长连接底层实现（`Assets/LocalPackages`）
-* **GGTask / Dependency** — 多线程任务队列与通用工具程序集
+| 依赖 | 性质 | 说明 / 获取方式 |
+| ---- | ---- | ---- |
+| **Best HTTP (Pro)** | 商业授权 | HTTP 底层。**需自行购买导入**，不进版本库，见下方"获取 Best HTTP (Pro)" |
+| **PomeloClient / UnityWebSocket** | 内置 | 长连接底层实现（`Assets/LocalPackages`） |
+| **GGTask / Dependency** | 内置 | 多线程任务队列与通用工具程序集 |
+
+### 获取 Best HTTP (Pro)
+
+Best HTTP (Pro) 是付费商业插件，出于许可协议考虑**不随仓库分发**。使用前需：
+
+1. 从 [Asset Store - Best HTTP (Pro)](https://assetstore.unity.com/packages/tools/network/best-http-2-187279) 或 [官方商店](https://besthttp.net/) 购买并下载
+2. 将插件导入到 `GGNetwork/Assets/LocalPackages/Best HTTP (Pro)/`
+3. 确认与框架引用的版本匹配（框架已适配其公开 API）
+
+> 若无法提供该依赖，框架的 **HTTP 层不会激活**，但 **Socket 长连接 / HTTPDNS / 下载** 等基于其他底层的能力不受影响。也可通过 `IHTTPFactory` 挂载替代 HTTP 实现。
 
 ## TODO-List
 
