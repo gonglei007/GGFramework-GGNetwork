@@ -65,3 +65,7 @@ GGNetwork/obj
 GGNetwork/Assets/InitTestScene638069698071515770.unity
 GGNetwork/Assets/InitTestScene638069698071515770.unity.meta
 GGNetwork/UserSettings
+
+# 付费商业第三方库：Best HTTP (Pro) 为需自行购买的授权资产，不进版本控制
+# 需在目标工程内通过 Unity Package Manager / 手动导入方式使用
+GGNetwork/Assets/LocalPackages/Best HTTP (Pro)/

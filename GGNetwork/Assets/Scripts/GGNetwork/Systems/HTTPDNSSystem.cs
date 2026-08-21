@@ -86,13 +86,18 @@ namespace GGFramework.GGNetwork.HTTPDNS
 
         private HTTPDNS httpDNS = null;
         private Dictionary<string, Cache> hostMap = new Dictionary<string, Cache>();
+        // hostMap 会被 timer 线程(CheckAndUpdateCache)与主线程(回调)同时读写，用锁保护。
+        private readonly object hostMapLock = new object();
         private bool on = false;    // 是否开启。
         private Timer timer = null;
 
         internal void Init(HTTPDNSFactory.Provider provider)
         {
             httpDNS = HTTPDNSFactory.CreateHTTPDNS(provider);
-            hostMap.Clear();
+            lock (hostMapLock)
+            {
+                hostMap.Clear();
+            }
             timer = new Timer(1000);
             timer.AutoReset = true;
             timer.Elapsed += (System.Object source, ElapsedEventArgs e) => {
@@ -104,8 +109,14 @@ namespace GGFramework.GGNetwork.HTTPDNS
         // 定时检查并更新缓存。
         private void CheckAndUpdateCache()
         {
-            foreach (string domain in hostMap.Keys) {
-                Cache cache = hostMap[domain];
+            // 在锁内取快照，避免遍历与并发写冲突。
+            List<KeyValuePair<string, Cache>> snapshot;
+            lock (hostMapLock)
+            {
+                snapshot = new List<KeyValuePair<string, Cache>>(hostMap);
+            }
+            foreach (var pair in snapshot) {
+                Cache cache = pair.Value;
                 if (cache == null) {
                     continue;
                 }
@@ -176,9 +187,12 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 Uri uri = new Uri(urlOrDomain);
                 domain = uri.Host;
             }
-            if (hostMap.ContainsKey(domain)) {
-                Cache cache = hostMap[domain];
-                result = ReplaceHost(urlOrDomain, cache.ip);
+            lock (hostMapLock)
+            {
+                if (hostMap.ContainsKey(domain)) {
+                    Cache cache = hostMap[domain];
+                    result = ReplaceHost(urlOrDomain, cache.ip);
+                }
             }
             return result;
         }
@@ -229,13 +243,16 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 return;
             }
             httpDNS.QueryHost(domain, (Cache cache, HTTPDNSSystem.EStatus status, string mesage) => {
-                if (status == EStatus.RET_SUCCESS && cache != null)
+                lock (hostMapLock)
                 {
-                    hostMap[domain] = cache;
-                }
-                else 
-                {
-                    hostMap.Remove(domain);
+                    if (status == EStatus.RET_SUCCESS && cache != null)
+                    {
+                        hostMap[domain] = cache;
+                    }
+                    else 
+                    {
+                        hostMap.Remove(domain);
+                    }
                 }
                 callback(cache, status, message);
             });
@@ -257,15 +274,20 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 return;
             }
             httpDNS.QueryHosts(domains, (List<Cache> cacheList, HTTPDNSSystem.EStatus status, string mesage) => {
+                if (cacheList == null)
+                {
+                    callback(null, status, message);
+                    return;
+                }
                 foreach (Cache cache in cacheList) {
-                    if (cache != null && cache.ip != null)
+                    if (cache != null && cache.ip != null && !string.IsNullOrEmpty(cache.domain))
                     {
-                        hostMap[cache.domain] = cache;
+                        lock (hostMapLock)
+                        {
+                            hostMap[cache.domain] = cache;
+                        }
                     }
-                    else
-                    {
-                        hostMap.Remove(cache.domain);
-                    }
+                    // 空项 / 无效项：仅跳过，不 Remove 以避免空引用与误删。
                 }
                 callback(cacheList, status, message);
             });

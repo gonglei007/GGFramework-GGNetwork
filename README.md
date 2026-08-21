@@ -124,8 +124,8 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 
 ## 依赖
 
-* **Best HTTP (Pro)** — 预置 HTTP 底层实现（位于 `Assets/LocalPackages`）
-* **PomeloClient / UnityWebSocket** — 预置长连接底层实现（位于 `Assets/LocalPackages`）
+* **Best HTTP (Pro)** — HTTP 底层实现（**商业授权资产，不进版本库**，需自行购买导入后使用）
+* **PomeloClient / UnityWebSocket** — 长连接底层实现（`Assets/LocalPackages`）
 * **GGTask / Dependency** — 多线程任务队列与通用工具程序集
 
 ## TODO-List

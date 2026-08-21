@@ -15,9 +15,11 @@ using UnityEngine;
  */
 public class EagleEye
 {
-    static string KEY = "REDACTED_KEY";
-    static string TASK_ID = "REDACTED_TASKID";
-    const string HOST = "http://REDACTED_HOST";
+    // 生产凭据通过 Init(taskId, key) 注入，不再硬编码进源码。
+    // 注意：此前的密钥 KEY/TASK_ID/HOST 已随历史提交泄露，如曾用请务必在服务端吊销后更新。
+    static string KEY = "";
+    static string TASK_ID = "";
+    const string HOST = "https://your-eagleeye-host.example";
     const string GET_TEST_URI = "/edge_api/v2/get_test_url";
     const string GET_TEST_PARAM = "?task_id={0}&authts={1}&token={2}&scene=app";
 
@@ -55,7 +57,7 @@ public class EagleEye
         public string server_ip;
         public int server_port;
         public string channel_id;
-        public string app_id = "REDACTED_APPID";
+        public string app_id = "";   // 通过 Init 注入，不再硬编码特定游戏标识
 
         public ErrorMsg err_msg;
     }
@@ -94,14 +96,36 @@ public class EagleEye
     /// 调用初始化之后才打开功能。
     /// </summary>
     static public void Init() {
+        if (string.IsNullOrEmpty(KEY) || string.IsNullOrEmpty(TASK_ID) || Host.StartsWith("https://your-"))
+        {
+            Debug.LogWarning("EagleEye: 未配置有效凭据(KEY/TASK_ID/HOST)，功能保持关闭。请调用 Init(taskId, key, host, appId) 注入。");
+            return;
+        }
         EagleEye.On = true;
     }
 
-    static public void Init(string taskId, string key) {
+    /// <summary>
+    /// 初始化 EagleEye（网络诊断上报）。需在启动时注入第三方服务的真实凭据。
+    /// </summary>
+    /// <param name="taskId">第三方服务任务ID</param>
+    /// <param name="key">服务鉴权密钥</param>
+    /// <param name="host">服务地址（含协议与端口，按实际部署环境配置）</param>
+    /// <param name="appId">应用标识（用于上报归属）</param>
+    static public void Init(string taskId, string key, string host = null, string appId = null) {
         TASK_ID = taskId;
         KEY = key;
-        EagleEye.On = true;
+        if (!string.IsNullOrEmpty(host)) {
+            // 通过 hostOverride 字段支持注入，覆盖默认 const HOST。
+            hostOverride = host;
+        }
+        appIdOverride = appId;
+        Init();
     }
+
+    static string hostOverride = null;
+    static string appIdOverride = null;
+    static string Host => string.IsNullOrEmpty(hostOverride) ? HOST : hostOverride;
+    static string AppId => string.IsNullOrEmpty(appIdOverride) ? "" : appIdOverride;
 
     static public void SetProxy(string proxy)
     {
@@ -143,7 +167,7 @@ public class EagleEye
             Debug.Log($"EagleEye Start: 发起一次诊断：{identityInfo} extraReportParam: {extraReportParam}");
 
             string token = GenerateToken(GET_TEST_URI);
-            string completeURL = $"{HOST}{GET_TEST_URI}{string.Format(GET_TEST_PARAM, TASK_ID, authts, token)}";
+            string completeURL = $"{Host}{GET_TEST_URI}{string.Format(GET_TEST_PARAM, TASK_ID, authts, token)}";
 
             HTTPRequest request = new HTTPRequest(new Uri(completeURL), HTTPMethods.Post, (req, resp) =>
             {
@@ -325,7 +349,7 @@ public class EagleEye
         string postString = SimpleJson.SimpleJson.SerializeObject(postData); 
 
         string token = GenerateToken(REPORT_URI);
-        string completeURL = $"{HOST}{REPORT_URI}{string.Format(REPORT_PARAM, TASK_ID, authts, token)}";
+        string completeURL = $"{Host}{REPORT_URI}{string.Format(REPORT_PARAM, TASK_ID, authts, token)}";
 
         HTTPRequest uploadReq = new HTTPRequest(new Uri(completeURL), HTTPMethods.Post, (req, resp) =>
         {

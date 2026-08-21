@@ -187,7 +187,7 @@ namespace GGFramework.GGNetwork
                             request.ChangeState(NetworkRequest.RequestStates.Error);
                             OnRequestFinish(request);
                         }, null));
-                        throw e;
+                        // 错误已入队到主线程处理，不再重新抛出，避免子线程崩溃。
                     }
                     return null;
                 });
@@ -247,7 +247,7 @@ namespace GGFramework.GGNetwork
                     {
                         request.errorMessage = e.ToString();
                         OnRequestExceptionHandler(request);
-                        throw e;
+                        // 异常已转入错误处理，不再重新抛出。
                     }
                     break;
                 case NetworkRequest.RequestStates.Error:

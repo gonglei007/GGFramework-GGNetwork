@@ -70,7 +70,7 @@ namespace GGFramework.GGNetwork
         {
             set
             {
-                checkLogicErrorCode = true;
+                checkLogicErrorCode = value;
             }
             get
             {
@@ -82,7 +82,7 @@ namespace GGFramework.GGNetwork
         {
             set
             {
-                enablePreProcessParam = true;
+                enablePreProcessParam = value;
             }
             get
             {
@@ -95,7 +95,7 @@ namespace GGFramework.GGNetwork
         {
             set
             {
-                enableHttpDNS = true;
+                enableHttpDNS = value;
             }
             get
             {

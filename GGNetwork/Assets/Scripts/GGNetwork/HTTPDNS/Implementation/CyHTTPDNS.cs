@@ -7,13 +7,13 @@ namespace GGFramework.GGNetwork.HTTPDNS
 {
     internal class CyHTTPDNS: HTTPDNS
     {
-        //public const string HTTP_DNS_HOST = "103.150.251.71";   // 正式
-        public const string HTTP_DNS_HOST = "REDACTED_IP:40021";   // 测试
+        // 默认不预设任何环境地址，需通过 HTTPDNSSystem.SetAPIHost() 注入实际服务地址。
+        public const string HTTP_DNS_HOST = null;
         private const int HTTP_TIMEOUT = 10;
 
         private string apiHost = HTTP_DNS_HOST;
-        private string HTTP_DNS_API_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query";
-        private string HTTP_DNS_API_MULTI_QUERY = "http://" + HTTP_DNS_HOST + "/v1/dns/query_multi";
+        private string HTTP_DNS_API_QUERY = null;
+        private string HTTP_DNS_API_MULTI_QUERY = null;
 
         private System.Random random = new System.Random();
 
@@ -34,6 +34,10 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 this.apiHost = apiHost;
                 HTTP_DNS_API_QUERY = "http://" + apiHost + "/v1/dns/query";
                 HTTP_DNS_API_MULTI_QUERY = "http://" + apiHost + "/v1/dns/query_multi";
+            }
+            else
+            {
+                Debug.LogError("CyHTTPDNS 未配置 API Host，无法进行域名解析。请调用 HTTPDNSSystem.SetAPIHost() 注入。");
             }
         }
 
@@ -61,7 +65,7 @@ namespace GGFramework.GGNetwork.HTTPDNS
             HttpNetworkSystem.Instance.GetWebRequest(HTTP_DNS_API_QUERY, "?domain=" + domain, HttpNetworkSystem.ExceptionAction.Ignore, (JsonObject response) => {
                 if (response == null)
                 {
-                    message = string.Format("Request http dns failed!-{0}", response.ToString());
+                    message = "Request http dns failed! (null response)";
                     Debug.LogError(message);
                     callback(cache, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
                 }
@@ -129,7 +133,7 @@ namespace GGFramework.GGNetwork.HTTPDNS
             HttpNetworkSystem.Instance.GetWebRequest(HTTP_DNS_API_MULTI_QUERY, "?domain=" + domainParam, HttpNetworkSystem.ExceptionAction.Ignore, (JsonObject response) => {
                 if (response == null)
                 {
-                    message = string.Format("Request http dns failed!-{0}", response.ToString());
+                    message = "Request http dns failed! (null response)";
                     Debug.LogError(message);
                     callback(dnsList, HTTPDNSSystem.EStatus.RET_ERROR_RESULT, message);
                 }
