@@ -14,6 +14,13 @@ namespace GGFramework.GGNetwork
      */
     public class NetworkSystem : Singleton<NetworkSystem>
     {
+        /// <summary>
+        /// 长连接底层实现开关。
+        /// true（默认）= 内部基于 WebSocket + Pomelo 协议的实现（WebSocketNetworkClient）；
+        /// false = 回退到外部 TCP 版 Pomelo 实现（PomeloNetworkClient）。
+        /// </summary>
+        public static bool UseWebSocket = true;
+
         public struct ServiceInfo
         {
             public ServiceInfo(string host, int port)
@@ -68,7 +75,9 @@ namespace GGFramework.GGNetwork
         /// <returns></returns>
         public BaseNetworkClient CreateNetworkClient(string name, bool bindUI)
         {
-            BaseNetworkClient client = new PomeloNetworkClient(name);
+            BaseNetworkClient client = UseWebSocket
+                ? (BaseNetworkClient)new WebSocketNetworkClient(name)
+                : new PomeloNetworkClient(name);
             clientMap[name] = client;
             return client;
         }

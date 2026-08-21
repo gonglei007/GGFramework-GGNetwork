@@ -402,7 +402,7 @@ namespace GGFramework.GGNetwork
             }
         }
 
-        private void OnConnectExceptionHandler(string errorMessage)
+        protected void OnConnectExceptionHandler(string errorMessage)
         {
             Debug.LogWarning(errorMessage);
             if (opening)
