@@ -19,6 +19,13 @@ public class Demo : MonoBehaviour
     private const string badHttpURL = "http://no.gltop.com:8080";
     private const string testDomain = "data-cy.hkqingyi.com";
     private const string HttpDNSAPIHost = "REDACTED_IP:40021";
+
+    // WebSocket long-connection demo config (Pomelo server).
+    private const string wsName = "game";
+    private const string wsHost = "127.0.0.1";
+    private const int wsPort = 3014;
+    private const string wsPushRoute = "onChat";
+    private const string wsRequestRoute = "connector.entryHandler.query";
     private string[] testDomains = new string[]{
         "data-cy.hkqingyi.com",
         "data-cy.gotechgames.com",
@@ -71,6 +78,12 @@ public class Demo : MonoBehaviour
         HttpNetworkSystem.Instance.LogAdaptor.onPostError = (string id, string info) => {
             Debug.LogError($"[Error Report] {id}: {info}");
         };
+    }
+
+    void Update()
+    {
+        // Drive the WebSocket client: dispatch queued network events back to the main thread.
+        NetworkSystem.Instance.OnUpdate();
     }
 
     void OnGUI()
@@ -172,6 +185,52 @@ public class Demo : MonoBehaviour
             string size1 = NetworkUtil.GetFileLengthString(1024);      // 1 KB
             string size2 = NetworkUtil.GetFileLengthString(1048576);    // 1 MB
             QuestionDialogUI.Instance.ShowQuestion($"1024 = {size1}\n1048576 = {size2}", () => { }, () => { });
+        }
+
+        // ========== WebSocket ==========
+        GUI.Label(new Rect(XOffset, YOffset * 15 + 5, ButtonWidth, 20), "--- WebSocket (Pomelo) ---");
+
+        if (GUI.Button(new Rect(XOffset, YOffset * 16, ButtonWidth, ButtonHeight), $"WS: Connect {wsHost}:{wsPort}"))
+        {
+            NetworkSystem.Instance.ConnectNetworkClient(wsName, wsHost, wsPort, (JsonObject result) => {
+                int code = result.ContainsKey("code") ? System.Convert.ToInt32(result["code"]) : -1;
+                Debug.Log($"[WS] connect callback code={code}");
+                statusText = code == NetworkConst.CODE_OK ? "WS Connected" : "WS Connect Failed";
+            });
+        }
+
+        if (GUI.Button(new Rect(XOffset, YOffset * 17, ButtonWidth, ButtonHeight), $"WS: Subscribe Push ({wsPushRoute})"))
+        {
+            // Push subscription lives on the WebSocket client implementation.
+            var client = NetworkSystem.Instance.GetNetworkClient(wsName) as WebSocketNetworkClient;
+            if (client != null)
+            {
+                client.On(wsPushRoute, (JsonObject msg) => {
+                    Debug.Log("[WS Push] " + (msg != null ? msg.ToString() : "null"));
+                });
+                Debug.Log($"[WS] subscribed to push route: {wsPushRoute}");
+            }
+            else
+            {
+                Debug.LogWarning("[WS] client is not a WebSocketNetworkClient (check NetworkSystem.UseWebSocket).");
+            }
+        }
+
+        if (GUI.Button(new Rect(XOffset, YOffset * 18, ButtonWidth, ButtonHeight), "WS: Send Request"))
+        {
+            JsonObject msg = new JsonObject();
+            msg["content"] = "hello";
+            msg["ts"] = NetworkUtil.GetTimeStamp();
+            NetworkSystem.Instance.SendRequest(wsName, wsRequestRoute, msg, (JsonObject response) => {
+                Debug.Log("[WS Response] " + (response != null ? response.ToString() : "null"));
+            });
+        }
+
+        if (GUI.Button(new Rect(XOffset, YOffset * 19, ButtonWidth, ButtonHeight), "WS: Disconnect"))
+        {
+            NetworkSystem.Instance.CloseClient(wsName);
+            statusText = "WS Disconnected";
+            Debug.Log("[WS] disconnected");
         }
     }
 }

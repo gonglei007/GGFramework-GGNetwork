@@ -25,6 +25,7 @@ internal class UnityWebRequestResponse : HTTPResponse
 
     public override int GetStatusCode()
     {
+        if (request == null) return 0;
         return (int)request.responseCode;
     }
 

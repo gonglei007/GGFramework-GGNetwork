@@ -68,7 +68,7 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 
 **第三方支持**
 
-- 支持 **HTTP/HTTPS 连接**（已实现）：预置 `Best HTTP (Pro)` 作为底层；也可挂载自定义或其它第三方 HTTP 模块
+- 支持 **HTTP/HTTPS 连接**（已实现）：默认使用 **Unity 原生 `UnityWebRequest`** 作为 HTTP 底层（内部实现，具备超时/Header 注入/状态映射/异常上报，`HttpNetworkSystem.UseUnityWebRequest` 可回退）；也可挂载自定义或其它第三方 HTTP 模块
 - 支持 **Socket / 长连接**（已实现）：**内置**基于 WebSocket + Pomelo 协议的客户端（`GGFramework.GGNetwork.Socket.WebSocket`，传输层用 `ClientWebSocket`，应用层内化握手/心跳/请求-响应/推送路由）；可通过 `BaseNetworkClient` 挂载其它第三方长连接模块，并保留 TCP 版 `PomeloClient` 作为可切换回退（`NetworkSystem.UseWebSocket=false`）
 - 支持 **HttpDNS Provider 插拔**：预置橙域实现，工厂预留腾讯、阿里
 
@@ -97,7 +97,7 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 | `GameNetworkSystem` | 系统总入口，按固定顺序完成整体初始化编排 |
 | `HttpNetworkSystem` | HTTP 层总入口：`Post/Get` 请求、异常处理策略、参数签名、多线程、结果统一分发 |
 | `NetworkSystem` | 长连接总入口：客户端连接管理（默认 game / notify 两条）、请求发送、轮询刷新 |
-| `DownloadSystem` | 文件下载管理：流式下载、进度回调、失败自动重试 |
+| `DownloadSystem` | 文件下载管理：Unity 原生 `DownloadHandlerFile` 边下边写、进度/总大小回调、失败自动重试 |
 | `HTTPDNSSystem` | 域名解析：本地缓存、TTL 定时刷新、按 IP 替换 host |
 | `ServiceCenter` | 网络服务中心：连接/请求超时参数、服务域名动态刷新 |
 
@@ -126,7 +126,8 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 
 | 依赖 | 性质 | 说明 / 获取方式 |
 | ---- | ---- | ---- |
-| **Best HTTP (Pro)** | 商业授权 | HTTP 底层。**需自行购买导入**，不进版本库，见下方"获取 Best HTTP (Pro)" |
+| **Unity Web Request** | 内置（默认） | HTTP 底层**默认内置** Unity 原生实现（传输层用 `UnityEngine.Networking.UnityWebRequest`，见 `Scripts/GGNetwork/HTTP`），不依赖第三方 HTTP 库 |
+| **Best HTTP (Pro)** | 可选（第三方适配） | 原 HTTP 底层，已迁移；如需回退可选购导入后经 `HttpNetworkSystem.UseUnityWebRequest=false` 启用，见下方"获取 Best HTTP (Pro)" |
 | **PomeloClient / UnityWebSocket** | 内置（回退） | 长连接**默认已内置内部 WebSocket 实现**（`Scripts/GGNetwork/Socket/WebSocket`）；外部 TCP 版 `PomeloClient` 仅作可选回退底层（`Assets/LocalPackages`，`NetworkSystem.UseWebSocket=false` 时启用） |
 | **GGTask / Dependency** | 内置 | 多线程任务队列与通用工具程序集 |
 
@@ -138,7 +139,7 @@ Best HTTP (Pro) 是付费商业插件，出于许可协议考虑**不随仓库�
 2. 将插件导入到 `GGNetwork/Assets/LocalPackages/Best HTTP (Pro)/`
 3. 确认与框架引用的版本匹配（框架已适配其公开 API）
 
-> 若无法提供该依赖，框架的 **HTTP 层不会激活**，但 **Socket 长连接 / HTTPDNS / 下载** 等基于其他底层的能力不受影响。也可通过 `IHTTPFactory` 挂载替代 HTTP 实现。
+> **说明**：框架 HTTP 层与下载系统均已默认使用 **Unity 原生实现**，无需 Best HTTP (Pro) 即可运行。Best HTTP (Pro) 现为**可选回退**（`HttpNetworkSystem.UseUnityWebRequest=false` 时启用）；也可通过 `IHTTPFactory` 挂载其它第三方 HTTP 实现。
 
 ## TODO-List
 

@@ -19,16 +19,16 @@ namespace GGFramework.GGNetwork.Socket
         /// <summary>编码带包体的完整包。</summary>
         public static byte[] Encode(PackageType type, byte[] body)
         {
-            int length = HEADER_LENGTH;
-            if (body != null) length += body.Length;
+            int bodyLength = body != null ? body.Length : 0;
+            int length = HEADER_LENGTH + bodyLength;
 
             byte[] buf = new byte[length];
             int index = 0;
 
             buf[index++] = Convert.ToByte(type);
-            buf[index++] = Convert.ToByte(body.Length >> 16 & 0xFF);
-            buf[index++] = Convert.ToByte(body.Length >> 8 & 0xFF);
-            buf[index++] = Convert.ToByte(body.Length & 0xFF);
+            buf[index++] = Convert.ToByte(bodyLength >> 16 & 0xFF);
+            buf[index++] = Convert.ToByte(bodyLength >> 8 & 0xFF);
+            buf[index++] = Convert.ToByte(bodyLength & 0xFF);
 
             while (index < length)
             {

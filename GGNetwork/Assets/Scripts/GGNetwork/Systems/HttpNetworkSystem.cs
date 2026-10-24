@@ -426,7 +426,10 @@ namespace GGFramework.GGNetwork
                                 }
                                 else 
                                 {
-                                    callback(responseObject);
+                                    if (callback != null)
+                                    {
+                                        callback(responseObject);
+                                    }
                                 }
                             }
                         });
@@ -599,6 +602,9 @@ namespace GGFramework.GGNetwork
                     }
                     else 
                     {
+                        // 不校验业务错误码时，仍需把响应体解析为 JsonObject 交给回调，
+                        // 否则成功回调将收到 null（历史缺陷：默认配置下响应数据被丢弃）。
+                        responseObj = SimpleJson.SimpleJson.DeserializeObject<JsonObject>(responseData);
                         code = NetworkConst.CODE_OK;
                     }
                 }
