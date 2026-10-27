@@ -20,6 +20,10 @@ namespace GGFramework.GGNetwork.Socket
         public static byte[] Encode(PackageType type, byte[] body)
         {
             int bodyLength = body != null ? body.Length : 0;
+            if (bodyLength > 0xFFFFFF)
+            {
+                throw new ArgumentException("Package body is too large: the 3-byte length field supports at most 0xFFFFFF (16777215) bytes.", "body");
+            }
             int length = HEADER_LENGTH + bodyLength;
 
             byte[] buf = new byte[length];
