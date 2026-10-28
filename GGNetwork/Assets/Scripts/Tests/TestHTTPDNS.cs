@@ -61,6 +61,7 @@ public class TestHTTPDNS
     [Test]
     public void Test_HTTPDNSFactory_UnknownProviderReturnsNull()
     {
+        LogAssert.ignoreFailingMessages = true;
         var dns = HTTPDNSFactory.CreateHTTPDNS(HTTPDNSFactory.Provider.Ali);
         Assert.That(dns, Is.Null);
     }

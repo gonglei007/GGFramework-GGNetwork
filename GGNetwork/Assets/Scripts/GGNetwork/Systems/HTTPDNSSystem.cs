@@ -123,7 +123,7 @@ namespace GGFramework.GGNetwork.HTTPDNS
                 //Debug.LogFormat("Cache [{0}]:updated-{1} | ttl-{2}", cache.domain, cache.UpdatedTime, cache.ttl);
                 if (cache.UpdatedTime > cache.TTL) {
                     cache.ResetUpdateTime();
-                    ParseHost(domain, (Cache cacheRet, EStatus status, string message) => {
+                    ParseHost(cache.domain, (Cache cacheRet, EStatus status, string message) => {
                         //if (message != null)
                         //{
                         //    Debug.Log(message);

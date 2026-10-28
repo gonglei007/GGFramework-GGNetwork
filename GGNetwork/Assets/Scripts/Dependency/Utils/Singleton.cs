@@ -44,7 +44,11 @@ public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 						_instance = singleton.AddComponent<T>();
 						singleton.name = "(singleton) "+ typeof(T).ToString();
 						
-						DontDestroyOnLoad(singleton);
+						// DontDestroyOnLoad 仅在播放模式下合法；编辑器（含 EditMode 单元测试）中调用会抛 InvalidOperationException，故加播放状态守卫。
+						if (Application.isPlaying)
+						{
+							DontDestroyOnLoad(singleton);
+						}
 						
 						Debug.Log("[Singleton] An instance of " + typeof(T) + 
 						          " is needed in the scene, so '" + singleton +

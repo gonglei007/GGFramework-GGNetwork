@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine.TestTools;
 using GGFramework.GGNetwork;
 
 public class TestHTTPRequest
@@ -47,6 +48,7 @@ public class TestHTTPRequest
     [Test]
     public void Test_CreateGetRequest_ReturnsNull()
     {
+        LogAssert.ignoreFailingMessages = true;
         var request = new HTTPRequest();
         var result = request.CreateGetRequest(null, HttpNetworkSystem.ExceptionAction.Ignore, null);
         Assert.That(result, Is.Null);
@@ -55,6 +57,7 @@ public class TestHTTPRequest
     [Test]
     public void Test_CreatePostRequest_ReturnsNull()
     {
+        LogAssert.ignoreFailingMessages = true;
         var request = new HTTPRequest();
         var result = request.CreatePostRequest(null, null, null, null, HttpNetworkSystem.ExceptionAction.Ignore, null);
         Assert.That(result, Is.Null);

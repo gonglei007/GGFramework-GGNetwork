@@ -68,7 +68,7 @@ namespace GGFramework.GGNetwork
 
         protected override void initClient()
         {
-            uiAdaptor.ShowWaiting(true);
+            UIAdaptor.ShowWaiting(true);
             //Debug.LogFormat("[thread-{0}]准备启动连接任务！", Thread.CurrentThread.ManagedThreadId);
             TaskSystem.Instance.QueueJob(() =>
             {
@@ -91,7 +91,6 @@ namespace GGFramework.GGNetwork
                     handshakeResult)
                 );
             });
-            return connected;
         }
 
         protected override void InnerRequest(string route, JsonObject msg, Action<JsonObject> callback)

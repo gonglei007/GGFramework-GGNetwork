@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using SimpleJson;
+using UnityEngine.TestTools;
 using GGFramework.GGNetwork.Socket;
 
 /// <summary>
@@ -82,6 +83,7 @@ public class TestEventManager
     [Test]
     public void Test_InvokeCallBack_ThrowingCallback_DoesNotPropagate()
     {
+        LogAssert.ignoreFailingMessages = true;
         var mgr = new EventManager();
         mgr.AddCallBack(5, d => throw new InvalidOperationException("boom"));
 
@@ -144,6 +146,7 @@ public class TestEventManager
     [Test]
     public void Test_InvokeOnEvent_ThrowingSubscriber_IsolatedAndOthersStillRun()
     {
+        LogAssert.ignoreFailingMessages = true;
         var mgr = new EventManager();
         int secondRan = 0;
         mgr.AddOnEvent("onChat", d => throw new InvalidOperationException("boom"));

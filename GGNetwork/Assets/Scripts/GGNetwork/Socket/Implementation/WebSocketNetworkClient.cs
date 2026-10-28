@@ -64,7 +64,7 @@ namespace GGFramework.GGNetwork
 
         protected override void initClient()
         {
-            uiAdaptor.ShowWaiting(true);
+            UIAdaptor.ShowWaiting(true);
             // 构造 ws:// 地址，兼容 host 已是 ws:// 前缀的情况。
             string url = BuildWsUrl(host, port);
             TaskSystem.Instance.QueueJob(() =>

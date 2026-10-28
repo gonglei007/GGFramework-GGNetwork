@@ -8,7 +8,9 @@
         "Dependency",
         "GUID:6ba7e54402fd247638281fb939d182eb"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,

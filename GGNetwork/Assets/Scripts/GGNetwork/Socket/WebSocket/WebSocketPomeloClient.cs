@@ -113,7 +113,7 @@ namespace GGFramework.GGNetwork.Socket
                     // 处理服务端握手响应
                     if (handshake != null)
                     {
-                        string error;
+                        string error = null;
                         var data = SimpleJson.SimpleJson.DeserializeObject(
                             System.Text.Encoding.UTF8.GetString(pkg.body)) as JsonObject;
                         if (data != null && handshake.ProcessHandshakeData(data, out error))

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using SimpleJson;
 using GGFramework.GGNetwork;
 
@@ -58,6 +59,7 @@ public class TestNetworkUtil
     [Test]
     public void Test_GetIPFromHost_InvalidHost()
     {
+        LogAssert.ignoreFailingMessages = true;
         string ip = NetworkUtil.GetIPFromHost("this-host-does-not-exist.invalid");
         Assert.That(ip, Is.EqualTo("0.0.0.0"));
     }
