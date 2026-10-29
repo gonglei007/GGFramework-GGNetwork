@@ -30,7 +30,9 @@ namespace GGFramework.GGNetwork {
             {
                 onDialog(GetText(title), GetText(message), confirm, callback);
             }
-            else {
+            else if (callback != null)
+            {
+                // 未注入 UI 实现时默认“确认”，避免调用方未传 callback 时抛 NullReferenceException（P0 修复）。
                 callback(true);
             }
         }
