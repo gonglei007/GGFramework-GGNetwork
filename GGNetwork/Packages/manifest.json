@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.gonglei.ggframework.core": "https://github.com/gonglei007/GGFramework-Core.git#v0.1.1",
     "com.unity.ai.navigation": "2.0.12",
     "com.unity.cinemachine": "2.10.7",
     "com.unity.collab-proxy": "2.12.4",
