@@ -5,18 +5,20 @@
 ## 1. 导入
 
 - 复制 `GGNetwork/Assets/Scripts/GGNetwork/` 目录到你的工程
-- 复制 `GGNetwork/Assets/Scripts/Dependency/` 目录到你的工程
-- 不要复制 `.asmdef` 文件到你的工程，或者根据需要修改引用
+- 复制 `GGNetwork/Assets/Scripts/Dependency/` 目录到你的工程（仅含 `GameDebugger` / `ZipUtil` 等；`Singleton` / `CoroutineUtil` / `TaskSystem` 已移至 GGFramework.Core）
+- 在 `Packages/manifest.json` 添加 **GGFramework.Core** 依赖（基础类单一源，经 UPM 引用）：`"com.gonglei.ggframework.core": "https://github.com/gonglei007/GGFramework-Core.git#v0.1.1"`
+- 不要复制 `.asmdef` 文件到你的工程，或者根据需要修改引用（若保留 asmdef，需让其引用 `GGFramework.Core.Runtime`）
 
 ### 工程依赖
 
-作为游戏产品框架中的一个系统，本系统没有另外对 Http/Socket 连接请求做实现。可以通过接口接入使用者自有的系统或者第三方网络库。
+本系统**默认内置** Unity 原生 `UnityWebRequest` 作为 HTTP 底层、内置 WebSocket + Pomelo 协议作为长连接底层，无需第三方库即可运行；也可通过 `IHTTPFactory` / `BaseNetworkClient` 接口挂载使用者自有系统或第三方网络库。此外依赖 **GGFramework.Core**（`Singleton` / `CoroutineUtil` / `TaskSystem` 单一源，经 UPM 引用）。
 
-| 第三方库 | 说明 | 必选 |
+| 依赖 | 说明 | 必选 |
 |----------|------|------|
+| GGFramework.Core | 基础类单一源（`Singleton` / `CoroutineUtil` / `TaskSystem`），UPM git URL 引用 `#v0.1.1` | 是 |
 | SimpleJson | 一个简单轻便的 Json 库 | 是 |
-| Best HTTP (Pro) | 一个优秀的 Http 网络库 | 否，可替换 |
-| Unity WebSocket (Pomelo) | Pomelo 网络框架的客户端网络库 | 否，可替换 |
+| Best HTTP (Pro) | 一个优秀的 Http 网络库（现为可选回退，默认用内置 `UnityWebRequest`） | 否，可替换 |
+| Unity WebSocket (Pomelo) | Pomelo 网络框架的客户端网络库（现为可选回退，默认用内置 WebSocket） | 否，可替换 |
 
 ## 2. 初始化代码
 

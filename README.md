@@ -14,12 +14,12 @@
 
 ## 快速开始
 
-复制框架与依赖目录到你的工程，初始化后即可发请求：
+复制框架与依赖目录到你的工程，并在 `Packages/manifest.json` 添加 **GGFramework.Core** 依赖（`#v0.1.1`，基础类单一源），初始化后即可发请求：
 
 ```csharp
 using GGFramework.GGNetwork;
 
-// 1. 复制 GGNetwork/Assets/Scripts/GGNetwork/ 与 Dependency/ 到你的工程
+// 1. 复制 GGNetwork/Assets/Scripts/GGNetwork/ 与 Dependency/ 到你的工程，并添加 GGFramework.Core UPM 依赖（#v0.1.1）
 // 2. 初始化（启动时调用一次）
 NetworkConst.InitEx(secretKey: "your-key", deviceUID: SystemInfo.deviceUniqueIdentifier,
     channel: "google-play", clientVersion: Application.version);
@@ -129,7 +129,8 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 | **Unity Web Request** | 内置（默认） | HTTP 底层**默认内置** Unity 原生实现（传输层用 `UnityEngine.Networking.UnityWebRequest`，见 `Scripts/GGNetwork/HTTP`），不依赖第三方 HTTP 库 |
 | **Best HTTP (Pro)** | 可选（第三方适配） | 原 HTTP 底层，已迁移；如需回退可选购导入后经 `HttpNetworkSystem.UseUnityWebRequest=false` 启用，见下方"获取 Best HTTP (Pro)" |
 | **PomeloClient / UnityWebSocket** | 内置（回退） | 长连接**默认已内置内部 WebSocket 实现**（`Scripts/GGNetwork/Socket/WebSocket`）；外部 TCP 版 `PomeloClient` 仅作可选回退底层（`Assets/LocalPackages`，`NetworkSystem.UseWebSocket=false` 时启用） |
-| **GGTask / Dependency** | 内置 | 多线程任务队列与通用工具程序集 |
+| **GGFramework.Core** | UPM（必需） | `Singleton` / `CoroutineUtil` / `TaskSystem`（`GTask`）的单一源，经 UPM git URL 引用 `#v0.1.1`；工程内本地副本已删除 |
+| **Dependency/Utils** | 内置 | `GameDebugger` / `ZipUtil` 等通用工具（`Singleton` / `CoroutineUtil` / `TaskSystem` 已移至 GGFramework.Core） |
 
 ### 获取 Best HTTP (Pro)
 
