@@ -105,6 +105,118 @@ HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login
 
 ![GGNetwork 架构](documents/exports/GGNetwork_Architecture.png)
 
+### 关键流程时序图
+
+以下三张时序图按源码核实绘制，涵盖框架三条核心链路：HTTP 请求（多线程 + 主线程调度）、WebSocket 长连接与请求-响应、文件下载（边下边写 + 失败重试）。图以 **mermaid** 内嵌维护（GitHub 原生渲染），格式约定见 GGFramework-Docs `architecture/architecture-diagram.md` §5。
+
+#### HTTP 请求
+
+`HttpNetworkSystem` 在子线程（`TaskSystem`）发起，但 `UnityWebRequest` 必须主线程创建与发送，因此经 `HttpRequestDriver` 把发送协程投递回主线程，完成后统一由 `OnRequestFinished` 分发成功/错误/超时。
+
+```mermaid
+sequenceDiagram
+    participant Biz as 游戏业务
+    participant HNS as HttpNetworkSystem
+    participant Fac as HTTPFactory
+    participant Req as UnityWebRequestRequest
+    participant TS as TaskSystem 子线程
+    participant Drv as HttpRequestDriver 主线程
+    participant UWR as UnityWebRequest
+
+    Biz->>HNS: PostWebRequest 地址/命令/参数/回调
+    HNS->>HNS: PreProcessParam 签名, 可选 HTTPDNS 换 IP
+    HNS->>Fac: CreateHTTPRequest
+    Fac-->>HNS: HTTPRequest 实例
+    HNS->>Req: CreatePostRequest 配置 Header/Body
+    HNS->>HNS: DoSendRequest, ShowWaiting true
+    HNS->>TS: QueueJob
+    TS->>Req: SendRequest
+    Req->>Drv: Enqueue 投递主线程
+    Drv->>UWR: StartCoroutine, SendWebRequest
+    UWR-->>Req: Result Success/Error/Timeout
+    Req->>HNS: OnRequestFinished
+    HNS->>HNS: ShowWaiting false, 校验 code, HandleServerData
+    HNS-->>Biz: callback responseObject
+    Note over HNS,Biz: 失败走 OnExceptionHandler<br/>UIAdaptor 弹窗重试 / LogAdaptor 上报
+```
+
+#### WebSocket 长连接与请求
+
+`NetworkSystem` 管理多条 `BaseNetworkClient`（默认 `game` / `notify`）。连接与请求均在子线程发起，事件经内部队列在主线程 `Update` 出队回调；断线时按 `AutoReconnectTimes` / `ReconnectionDelay` 自动重连。
+
+```mermaid
+sequenceDiagram
+    participant Biz as 游戏业务
+    participant NS as NetworkSystem
+    participant Cli as WebSocketNetworkClient
+    participant TS as TaskSystem 子线程
+    participant Ws as WebSocketPomeloClient
+    participant Srv as 服务器
+
+    Note over Biz,Cli: 连接阶段
+    Biz->>NS: ConnectNetworkClient name/host/port
+    NS->>Cli: Open, ShowWaiting true
+    Cli->>TS: QueueJob, client.Connect ws 地址
+    TS->>Ws: Connect 并握手
+    Ws->>Srv: WebSocket 握手
+    Srv-->>Ws: 握手成功
+    Ws-->>Cli: OnNetWorkStateChanged CONNECTED
+    Cli->>Cli: InnerEventTrigger, 主线程 Update 出队
+    Cli-->>NS: onConnected
+    NS-->>Biz: callback code OK
+
+    Note over Biz,Srv: 请求-响应阶段
+    Biz->>NS: SendRequest name/route/msg
+    NS->>Cli: Request 入 requestList
+    Cli->>Cli: Update Initial 到 DoSendRequest
+    Cli->>TS: QueueJob, InnerRequest
+    TS->>Ws: Request 编码 Pomelo 包
+    Ws->>Srv: 发送
+    Srv-->>Ws: 响应
+    Ws-->>Cli: callback response, 置 Finished
+    Cli->>Cli: InnerDoResponse 入 responseQueue
+    Cli->>Cli: Update OnRequestFinish 解包校验
+    Cli-->>Biz: request.DoCallback
+    Note over Cli: 断线自动重连<br/>AutoReconnectTimes / ReconnectionDelay
+```
+
+#### 文件下载
+
+`DownloadSystem` 基于 `UnityWebRequest` + `DownloadHandlerFile` 边下边写本地文件（不占内存），同样经 `HttpRequestDriver` 投递主线程启动协程；失败删半截文件并延迟 3 秒重试（最多 3 次），`ClearDownLoad` 可取消。
+
+```mermaid
+sequenceDiagram
+    participant Biz as 游戏业务
+    participant DS as DownloadSystem
+    participant Drv as HttpRequestDriver 主线程
+    participant UWR as UnityWebRequest DownloadHandlerFile
+    participant Disk as 本地文件
+
+    Biz->>DS: RequestDownload url/savePath/回调
+    DS->>Drv: Enqueue 记录活动任务并启动协程
+    Drv->>DS: StartDownloadCoroutine
+    DS->>Disk: 删旧文件, 建目录
+    DS->>UWR: new GET 请求, SendWebRequest
+    loop 每帧直到完成或取消
+        UWR-->>DS: downloadProgress
+        DS-->>Biz: progress
+    end
+    UWR->>Disk: 边下边写
+    alt 成功
+        DS-->>Biz: progress 1, complete url
+    else 失败
+        DS->>Disk: 删除半截文件
+        alt 重试不超过 3 次
+            DS->>Drv: RetryDelayed 3s 重新入队
+        else 超过上限
+            DS-->>Biz: complete null
+        end
+    else 用户取消 ClearDownLoad
+        DS->>UWR: Abort
+        DS->>Disk: 删除半截文件
+    end
+```
+
 ## 文档
 
 * [如何快速接入?](/documents/quickstart.md)
@@ -146,7 +258,7 @@ Best HTTP (Pro) 是付费商业插件，出于许可协议考虑**不随仓库�
 
 * ~~把 PomeloClient 充分剥离出来，作为可选插件~~（已实现：内置 WebSocket + Pomelo 内部实现 `GGFramework.GGNetwork.Socket.WebSocket`，已作为默认长连接底层；`NetworkSystem.UseWebSocket` 可回退 TCP）
 * 更完整的 Demo 演示（含 WebSocket 长连接联机示例）
-* 补充架构分层示意图 (mermaid / SVG)
+* ~~补充架构分层示意图 (mermaid / SVG)~~（已补充：README 「关键流程时序图」新增 HTTP / WebSocket / 下载三张 mermaid 时序图）
 
 ## 更多资料
 
