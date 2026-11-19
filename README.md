@@ -1,39 +1,65 @@
-<p align="center">
-  <h1 align="center">GGNetwork (内测版)</h1>
-  <p align="center">
-    <a href="https://github.com/gonglei007/GGFramework-GGNetwork/watchers" target="_blank"><img src="https://img.shields.io/github/watchers/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
-    <a href="https://github.com/gonglei007/GGFramework-GGNetwork/stargazers" target="_blank"><img src="https://img.shields.io/github/stars/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
-    <a href="https://github.com/gonglei007/GGFramework-GGNetwork/network/members" target="_blank"><img src="https://img.shields.io/github/forks/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
-    <img src="https://img.shields.io/github/repo-size/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/>
-    <a href="https://github.com/gonglei007/GGFramework-GGNetwork/graphs/contributors" target="_blank"><img src="https://img.shields.io/github/contributors/gonglei007/GGFramework-GGNetwork.svg" style="display: inherit;"/></a>
-  </p>
-  <p align="center">面向游戏客户端的可插拔网络框架 —— 内置异常重试 / 断线重连 / HttpDNS / 异常上报，HTTP、Socket、域名解析底层均可自由替换。</p>
-</p>
+# GGNetwork (内测版)
 
-![GGNetwork](assets/images/GGNetwork_banner.png)
+面向 Unity 游戏客户端的可插拔网络框架，支持 HTTP、WebSocket / Pomelo、HttpDNS、下载、异常重试与断线重连。
+
+[![Unity 6000.3.13f1](https://img.shields.io/badge/Unity-6000.3.13f1-222222?logo=unity)](https://github.com/gonglei007/GGFramework-GGNetwork/blob/main/GGNetwork/ProjectSettings/ProjectVersion.txt) [![Core dependency v0.1.1](https://img.shields.io/badge/Core_dependency-v0.1.1-2563eb)](https://github.com/gonglei007/GGFramework-Core/tree/v0.1.1) [![Branch main](https://img.shields.io/badge/Branch-main-64748b)](https://github.com/gonglei007/GGFramework-GGNetwork/tree/main)
+
+## 项目导航
+
+[Demo 体验](https://github.com/gonglei007/GGFramework-Demo) · [架构文档](https://github.com/gonglei007/GGFramework-Docs) · [Core](https://github.com/gonglei007/GGFramework-Core) · [GGResource](https://github.com/gonglei007/GGFramework-GGResource) · **GGNetwork** · [GGUI](https://github.com/gonglei007/GGFramework-GGUI) · [GGUser](https://github.com/gonglei007/GGFramework-GGUser)
+
+> **先体验整体框架**：[打开独立 Demo](https://github.com/gonglei007/GGFramework-Demo#快速开始)，体验资源、HTTP、UI、用户 SDK 与 Lua 的集成流程。[操作指南](https://github.com/gonglei007/GGFramework-Demo/blob/main/documents/showcase-guide.md) · [验收记录](https://github.com/gonglei007/GGFramework-Demo/blob/main/documents/showcase-verification.md)。
+
+## 模块关系
+
+本工程通过 UPM 固定使用 **Core v0.1.1**。HTTP / 长连接底层可替换，UI 和日志由 `UIAdaptor` / `LogAdaptor` 委托接入；宿主可组合 GGUI 或自己的界面系统。Demo 中的旧网络集成副本与本模块当前 API / 默认后端分别维护。
+
+完整依赖图、工程锁定版本和源码副本边界由[架构文档中心](https://github.com/gonglei007/GGFramework-Docs#模块关系)统一维护。
 
 ## 快速开始
 
-复制框架与依赖目录到你的工程，并在 `Packages/manifest.json` 添加 **GGFramework.Core** 依赖（`#v0.1.1`，基础类单一源），初始化后即可发请求：
+在准备存放代码的目录运行：
 
-```csharp
-using GGFramework.GGNetwork;
-
-// 1. 复制 GGNetwork/Assets/Scripts/GGNetwork/ 与 Dependency/ 到你的工程，并添加 GGFramework.Core UPM 依赖（#v0.1.1）
-// 2. 初始化（启动时调用一次）
-NetworkConst.InitEx(secretKey: "your-key", deviceUID: SystemInfo.deviceUniqueIdentifier,
-    channel: "google-play", clientVersion: Application.version);
-GameNetworkSystem.Instance.Init();
-
-// 3. 发请求
-JsonObject param = new JsonObject();
-param["username"] = "player1";
-HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login",
-    param, HttpNetworkSystem.ExceptionAction.ConfirmRetry,
-    (JsonObject response) => Debug.Log(response.ToString()));
+```powershell
+git clone https://github.com/gonglei007/GGFramework-GGNetwork.git
+# 在 Unity Hub 中打开 GGFramework-GGNetwork/GGNetwork
 ```
 
-> 完整接入流程见 [如何快速接入?](/documents/quickstart.md) 与 [技术手册](/documents/manual.md)
+1. 用 Unity **6000.3.13f1** 打开 `GGNetwork` 工程，等待 Core 和 Unity 包解析完成。
+2. 查看模块场景 [Demo.unity](GGNetwork/Assets/Demo/Demo.unity) 与[演示脚本](GGNetwork/Assets/Demo/Scripts/Demo.cs)。联机前将 HTTP、Pomelo 地址 / 端口和 HttpDNS 配置替换为自己的测试服务。
+3. 按场景按钮观察请求、异常反馈和重连；希望先跑通本机回环 HTTP，可直接使用上方的独立 Demo。
+4. 接入现有工程时，复制框架与依赖目录，并按[快速接入指南](documents/quickstart.md)完成初始化和宿主回调绑定。
+
+### 最小接入代码
+
+复制框架与依赖目录到你的工程，并在 `Packages/manifest.json` 添加 **GGFramework.Core** 依赖（`#v0.1.1`，基础类单一源）。将代码保存为 `NetworkHello.cs` 并挂到场景对象，把示例 URL 与参数替换为自己的测试服务：
+
+```csharp
+using UnityEngine;
+using SimpleJson;
+using GGFramework.GGNetwork;
+
+public sealed class NetworkHello : MonoBehaviour
+{
+    private void Start()
+    {
+        GameNetworkSystem.Instance.Init();
+        // Init() 会设置默认配置；自定义参数在其后写入。
+        NetworkConst.InitEx(secretKey: "your-key", deviceUID: SystemInfo.deviceUniqueIdentifier,
+            channel: "dev", clientVersion: Application.version);
+
+        var param = new JsonObject();
+        param["username"] = "player1";
+        HttpNetworkSystem.Instance.PostWebRequest("http://api.example.com", "/user/login",
+            param, HttpNetworkSystem.ExceptionAction.ConfirmRetry,
+            response => Debug.Log(response.ToString()));
+    }
+}
+```
+
+> 完整接入流程见 [如何快速接入?](documents/quickstart.md) 与 [技术手册](documents/manual.md)
+
+![GGNetwork](assets/images/GGNetwork_banner.png)
 
 ## 简介
 
@@ -219,8 +245,8 @@ sequenceDiagram
 
 ## 文档
 
-* [如何快速接入?](/documents/quickstart.md)
-* [技术手册](/documents/manual.md)
+* [如何快速接入?](documents/quickstart.md)
+* [技术手册](documents/manual.md)
 * 参考文档(TODO)
 
 ## 交流反馈
