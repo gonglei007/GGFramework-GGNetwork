@@ -72,3 +72,7 @@ GGNetwork/Assets/LocalPackages/Best HTTP (Pro)/
 
 # Qoder IDE ±¾µØ»º´æ
 .qoder/
+
+# CI tool checkout and generated regression evidence
+.ci-tools/
+.ci-output/

@@ -298,3 +298,9 @@ Best HTTP (Pro) 是付费商业插件，出于许可协议考虑**不随仓库�
 
 * [游戏开发图谱](https://github.com/gonglei007/GameDevMind)
   * [客户端网络系统](https://github.com/gonglei007/GameDevMind/blob/main/mds/3.1.4.%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%BD%91%E7%BB%9C%E7%B3%BB%E7%BB%9F.md)
+
+## 自动化 Unity 回归与 CI
+
+本仓契约：[ci/unity-regression.json](ci/unity-regression.json)。EditMode 至少 162 项，包括可选 BestHTTP 缺失时的明确失败与诊断关闭；不替代真实服务联调。
+
+共享执行器按 [Demo `6fba3a3`](https://github.com/gonglei007/GGFramework-Demo/tree/6fba3a32aae1951df8dd034dd15f36a36ab25895/tools/ci) 固定复用，保持本模块运行时依赖不变。[本地命令、一次性 Windows runner、触发规则、artifact 与边界](https://github.com/gonglei007/GGFramework-Demo/blob/6fba3a32aae1951df8dd034dd15f36a36ab25895/tools/ci/README.md)统一维护。分支 push 会排队真实 Unity job，PR 托管契约检查不能代替 Unity；没有 runner 时不会计为 Unity 通过。每轮结束后注销 runner，不安装服务、不上传 Unity 授权。

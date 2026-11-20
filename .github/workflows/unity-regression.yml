@@ -1,0 +1,82 @@
+name: Unity Regression
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Unity CI Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Checkout pinned CI tools
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: gonglei007/GGFramework-Demo
+          ref: 6fba3a32aae1951df8dd034dd15f36a36ab25895
+          path: .ci-tools
+          sparse-checkout: tools/ci
+          persist-credentials: false
+      - name: Validate contract and evidence gate
+        run: |
+          python3 .ci-tools/tools/ci/verify_results.py --contract ci/unity-regression.json
+          python3 -m unittest discover -s .ci-tools/tools/ci -p 'test_*.py' -v
+      - name: Parse PowerShell entry points
+        shell: pwsh
+        run: |
+          Get-ChildItem '.ci-tools/tools/ci' -Filter '*.ps1' | ForEach-Object {
+            $tokens=$null; $errors=$null
+            [Management.Automation.Language.Parser]::ParseFile($_.FullName,[ref]$tokens,[ref]$errors) | Out-Null
+            if ($errors) { throw ($errors | Out-String) }
+          }
+
+  unity:
+    name: Unity Regression
+    needs: validate
+    # Licensed workstation execution is owner-triggered and requires an exact-run one-shot runner.
+    if: github.actor == github.repository_owner
+    runs-on: [self-hosted, Windows, X64, 'ggframework-unity-${{ github.run_id }}-${{ github.run_attempt }}']
+    timeout-minutes: 60
+    env:
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: core.longpaths
+      GIT_CONFIG_VALUE_0: 'true'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Checkout pinned CI tools
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: gonglei007/GGFramework-Demo
+          ref: 6fba3a32aae1951df8dd034dd15f36a36ab25895
+          path: .ci-tools
+          sparse-checkout: tools/ci
+          persist-credentials: false
+      - name: Execute actual Unity regression
+        run: |
+          $reportRoot=Join-Path $env:RUNNER_TEMP "ggframework-$env:GITHUB_RUN_ID"
+          & './.ci-tools/tools/ci/Invoke-UnityRegression.ps1' -RepositoryRoot $env:GITHUB_WORKSPACE -OutputRoot $reportRoot
+      - name: Publish sanitized evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unity-regression-${{ github.sha }}
+          path: ${{ runner.temp }}/ggframework-${{ github.run_id }}/public/
+          if-no-files-found: error
+          retention-days: 14
