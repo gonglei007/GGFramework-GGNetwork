@@ -1,0 +1,38 @@
+name: PR CI Contract
+
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Validate PR CI Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Checkout pinned CI tools
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: gonglei007/GGFramework-Demo
+          ref: 6fba3a32aae1951df8dd034dd15f36a36ab25895
+          path: .ci-tools
+          sparse-checkout: tools/ci
+          persist-credentials: false
+      - name: Validate contract and evidence gate
+        run: |
+          python3 .ci-tools/tools/ci/verify_results.py --contract ci/unity-regression.json
+          python3 -m unittest discover -s .ci-tools/tools/ci -p 'test_*.py' -v
+      - name: Parse PowerShell entry points
+        shell: pwsh
+        run: |
+          Get-ChildItem '.ci-tools/tools/ci' -Filter '*.ps1' | ForEach-Object {
+            $tokens=$null; $errors=$null
+            [Management.Automation.Language.Parser]::ParseFile($_.FullName,[ref]$tokens,[ref]$errors) | Out-Null
+            if ($errors) { throw ($errors | Out-String) }
+          }

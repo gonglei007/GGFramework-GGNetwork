@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "unityVersion": "6000.3.13f1",
+  "repository": "gonglei007/GGFramework-GGNetwork",
+  "projectPath": "GGNetwork",
+  "stages": [
+    {
+      "name": "network-editmode",
+      "kind": "nunit",
+      "platform": "EditMode",
+      "minimum": 162,
+      "graphics": false
+    }
+  ]
+}
