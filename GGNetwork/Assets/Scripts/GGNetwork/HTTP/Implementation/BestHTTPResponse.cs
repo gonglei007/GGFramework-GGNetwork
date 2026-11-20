@@ -1,4 +1,5 @@
-﻿using System;
+#if GGNETWORK_BESTHTTP
+using System;
 using GGFramework.GGNetwork;
 
 internal class BestHTTPResponse: HTTPResponse
@@ -34,3 +35,5 @@ internal class BestHTTPResponse: HTTPResponse
         return response.Message;
     }
 }
+
+#endif

@@ -136,7 +136,11 @@ namespace GGFramework.GGNetwork
             else
             {
                 //HTTPManager.Logger.Level = BestHTTP.Logger.Loglevels.All;
+                #if GGNETWORK_BESTHTTP
                 BestHTTP.HTTPManager.Setup();
+#else
+                throw new NotSupportedException("Install BestHTTP and define GGNETWORK_BESTHTTP before selecting this backend.");
+#endif
             }
         }
 

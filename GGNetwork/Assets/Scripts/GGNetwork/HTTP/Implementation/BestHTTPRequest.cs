@@ -1,4 +1,5 @@
-﻿using System;
+#if GGNETWORK_BESTHTTP
+using System;
 using SimpleJson;
 using UnityEngine;
 using GGFramework.GGNetwork;
@@ -120,3 +121,5 @@ internal class BestHTTPRequest : HTTPRequest
         BestHTTP.HTTPManager.SendRequest(request);
     }
 }
+
+#endif
