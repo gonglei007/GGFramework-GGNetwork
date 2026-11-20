@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 //using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
+#if GGNETWORK_BESTHTTP
 using BestHTTP;
 using BestHTTP.Extensions;
+#endif
 using SimpleJson;
 using UnityEngine;
 
@@ -101,7 +103,12 @@ public class EagleEye
             Debug.LogWarning("EagleEye: 未配置有效凭据(KEY/TASK_ID/HOST)，功能保持关闭。请调用 Init(taskId, key, host, appId) 注入。");
             return;
         }
+        #if GGNETWORK_BESTHTTP
         EagleEye.On = true;
+#else
+        EagleEye.On = false;
+        Debug.LogWarning("EagleEye requires BestHTTP and GGNETWORK_BESTHTTP; diagnostics remain disabled.");
+#endif
     }
 
     /// <summary>
@@ -129,8 +136,12 @@ public class EagleEye
 
     static public void SetProxy(string proxy)
     {
+        #if GGNETWORK_BESTHTTP
         HTTPManager.Proxy = new HTTPProxy(new Uri(proxy));
         HTTPManager.ConnectTimeout = new TimeSpan(3);
+#else
+        throw new NotSupportedException("EagleEye proxy requires BestHTTP and GGNETWORK_BESTHTTP.");
+#endif
     }
 
     /**
@@ -139,6 +150,7 @@ public class EagleEye
      * @param identityInfo 每一次诊断的唯一标识，通常使用网络连接的地址
      * @param extraReportParam 额外上报的信息
      */
+    #if GGNETWORK_BESTHTTP
     static public void TestNetwork(string identityInfo, string extraReportParam = "")
     {
         if (!EagleEye.On) {
@@ -392,6 +404,13 @@ public class EagleEye
     /// 获取秒级时间戳
     /// </summary>
     /// <returns></returns>
+    #else
+    static public void TestNetwork(string identityInfo, string extraReportParam = "")
+    {
+        if (On) throw new NotSupportedException("EagleEye requires BestHTTP and GGNETWORK_BESTHTTP.");
+    }
+    #endif
+
     static private long GetTimestampSeconds()
     {
         TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);

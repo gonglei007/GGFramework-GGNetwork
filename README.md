@@ -30,6 +30,14 @@ git clone https://github.com/gonglei007/GGFramework-GGNetwork.git
 3. 按场景按钮观察请求、异常反馈和重连；希望先跑通本机回环 HTTP，可直接使用上方的独立 Demo。
 4. 接入现有工程时，复制框架与依赖目录，并按[快速接入指南](documents/quickstart.md)完成初始化和宿主回调绑定。
 
+### 实际 Unity 验证
+
+2026-11-20 在 Windows 11 / Unity 6000.3.13f1 实跑默认工程：EditMode **162 通过、0 失败、0 跳过**，退出码 0（含 2 项可选依赖回归）。[环境、时间、原始 XML 摘要及逐项结果](documents/unity-verification-2026-11-20.json)。首次原始检出因缺失 BestHTTP 无法编译，修复后重跑通过；这不是第三方后端或真实业务服务的联调结论。
+
+### 可选 BestHTTP 依赖
+
+默认检出只使用 UnityWebRequest，不需要 BestHTTP。安装兼容的 BestHTTP 插件并确保 `GGFramework.GGNetwork` 程序集能引用它后，才可添加 `GGNETWORK_BESTHTTP` 脚本宏并选择旧 BestHTTP 后端；EagleEye 也依赖该开关。未安装时显式选择 BestHTTP 会抛出 `NotSupportedException`，不会静默切换后端。本次 Unity 验证覆盖默认后端编译与模块测试，未验收第三方 BestHTTP 版本兼容性和真实 EagleEye 服务。
+
 ### 最小接入代码
 
 复制框架与依赖目录到你的工程，并在 `Packages/manifest.json` 添加 **GGFramework.Core** 依赖（`#v0.1.1`，基础类单一源）。将代码保存为 `NetworkHello.cs` 并挂到场景对象，把示例 URL 与参数替换为自己的测试服务：

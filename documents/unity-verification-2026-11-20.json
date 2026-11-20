@@ -1,0 +1,835 @@
+{
+  "date": "2026-11-20",
+  "baseline": "a80eaa7a55fa29fb700fd8b12e78ab290a0fc37d",
+  "unity": "6000.3.13f1 (8c4f11e4fb20)",
+  "os": "Windows 11 Pro 10.0.26300 x64",
+  "mode": "EditMode; batchmode; nographics; default UnityWebRequest; no GGNETWORK_BESTHTTP",
+  "startedUtc": "2026-11-20T04:01:44.1624017Z",
+  "finishedUtc": "2026-11-20T04:09:43.0597519Z",
+  "exitCode": 0,
+  "result": {
+    "result": "Passed",
+    "total": "162",
+    "passed": "162",
+    "failed": "0",
+    "skipped": "0"
+  },
+  "rawXmlSha256": "e93baa4fd26638cc3629ed0983b158efddb2477fbbbb3f9772cb276adf2b6b1c",
+  "cases": [
+    {
+      "fullname": "TestEventManager.Test_AddCallBack_DuplicateId_FirstWins",
+      "result": "Passed",
+      "duration": "0.023356"
+    },
+    {
+      "fullname": "TestEventManager.Test_AddCallBack_NullCallback_Ignored",
+      "result": "Passed",
+      "duration": "0.000717"
+    },
+    {
+      "fullname": "TestEventManager.Test_AddCallBack_ThenInvoke",
+      "result": "Passed",
+      "duration": "0.002900"
+    },
+    {
+      "fullname": "TestEventManager.Test_AddCallBack_ZeroId_Ignored",
+      "result": "Passed",
+      "duration": "0.000716"
+    },
+    {
+      "fullname": "TestEventManager.Test_AddOnEvent_EmptyName_Ignored",
+      "result": "Passed",
+      "duration": "0.000973"
+    },
+    {
+      "fullname": "TestEventManager.Test_AddOnEvent_MultipleSubscribers_AllInvoked",
+      "result": "Passed",
+      "duration": "0.002587"
+    },
+    {
+      "fullname": "TestEventManager.Test_AddOnEvent_NullCallback_Ignored",
+      "result": "Passed",
+      "duration": "0.000712"
+    },
+    {
+      "fullname": "TestEventManager.Test_Dispose_ClearsCallbacksAndEvents",
+      "result": "Passed",
+      "duration": "0.000641"
+    },
+    {
+      "fullname": "TestEventManager.Test_InvokeCallBack_RemovesAfterFire",
+      "result": "Passed",
+      "duration": "0.000702"
+    },
+    {
+      "fullname": "TestEventManager.Test_InvokeCallBack_ThrowingCallback_DoesNotPropagate",
+      "result": "Passed",
+      "duration": "0.008226"
+    },
+    {
+      "fullname": "TestEventManager.Test_InvokeCallBack_UnknownId_ReturnsFalse",
+      "result": "Passed",
+      "duration": "0.000354"
+    },
+    {
+      "fullname": "TestEventManager.Test_InvokeOnEvent_PersistsAcrossMultipleInvocations",
+      "result": "Passed",
+      "duration": "0.000648"
+    },
+    {
+      "fullname": "TestEventManager.Test_InvokeOnEvent_SubscriberAddingDuringInvoke_NoIterationCrash",
+      "result": "Passed",
+      "duration": "0.000717"
+    },
+    {
+      "fullname": "TestEventManager.Test_InvokeOnEvent_ThrowingSubscriber_IsolatedAndOthersStillRun",
+      "result": "Passed",
+      "duration": "0.001484"
+    },
+    {
+      "fullname": "TestEventManager.Test_InvokeOnEvent_UnknownRoute_ReturnsFalse",
+      "result": "Passed",
+      "duration": "0.000270"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_Constants",
+      "result": "Passed",
+      "duration": "0.002037"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_ProcessHandshakeData_MissingCode_Fails",
+      "result": "Passed",
+      "duration": "0.002205"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_ProcessHandshakeData_Non200_Fails",
+      "result": "Passed",
+      "duration": "0.000759"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_ProcessHandshakeData_Success",
+      "result": "Passed",
+      "duration": "0.004702"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_ProcessHandshakeData_WithSmallHeartbeat_CreatesServiceButNoTimer",
+      "result": "Passed",
+      "duration": "0.000884"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_Request_NullUser_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.002747"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_Request_SendsHandshakePackage",
+      "result": "Passed",
+      "duration": "0.000382"
+    },
+    {
+      "fullname": "TestHandShakeService.Test_Request_ThenProcess_InvokesBusinessCallbackWithUser",
+      "result": "Passed",
+      "duration": "0.000416"
+    },
+    {
+      "fullname": "TestHTTPDNS.Test_HTTPDNSFactory_CreatesCorrectProvider",
+      "result": "Passed",
+      "duration": "0.004241"
+    },
+    {
+      "fullname": "TestHTTPDNS.Test_HTTPDNSFactory_UnknownProviderReturnsNull",
+      "result": "Passed",
+      "duration": "0.001544"
+    },
+    {
+      "fullname": "TestHTTPDNS.Test_HTTPDNSSystem_Cache_DomainAndIP",
+      "result": "Passed",
+      "duration": "0.000878"
+    },
+    {
+      "fullname": "TestHTTPDNS.Test_HTTPDNSSystem_Cache_ResetUpdateTime",
+      "result": "Passed",
+      "duration": "0.001807"
+    },
+    {
+      "fullname": "TestHTTPDNS.Test_HTTPDNSSystem_Cache_TTL",
+      "result": "Passed",
+      "duration": "0.001046"
+    },
+    {
+      "fullname": "TestHTTPDNS.Test_HTTPDNSSystem_EStatus_Values",
+      "result": "Passed",
+      "duration": "0.000840"
+    },
+    {
+      "fullname": "TestHTTPDNS.Test_HTTPDNSSystem_GetURLByIP_ReturnsOriginalWhenOff",
+      "result": "Passed",
+      "duration": "0.003137"
+    },
+    {
+      "fullname": "TestHTTPDNSCache.Test_Cache_Defaults",
+      "result": "Passed",
+      "duration": "0.000336"
+    },
+    {
+      "fullname": "TestHTTPDNSCache.Test_Cache_IsExpiredLogic",
+      "result": "Passed",
+      "duration": "0.000396"
+    },
+    {
+      "fullname": "TestHTTPDNSCache.Test_Cache_MultipleResets",
+      "result": "Passed",
+      "duration": "0.000244"
+    },
+    {
+      "fullname": "TestHTTPDNSCache.Test_Cache_TTLClampBoundary",
+      "result": "Passed",
+      "duration": "0.000258"
+    },
+    {
+      "fullname": "TestHTTPDNSCache.Test_Cache_UpdateTimeStartsFresh",
+      "result": "Passed",
+      "duration": "0.000241"
+    },
+    {
+      "fullname": "TestHTTPForm.Test_DefaultConstructor_CreatesForm",
+      "result": "Passed",
+      "duration": "0.000944"
+    },
+    {
+      "fullname": "TestHTTPForm.Test_WrappingConstructor_Null",
+      "result": "Passed",
+      "duration": "0.000283"
+    },
+    {
+      "fullname": "TestHTTPForm.Test_WrappingConstructor_ReturnsSameInstance",
+      "result": "Passed",
+      "duration": "0.000570"
+    },
+    {
+      "fullname": "TestHTTPRequest.Test_CreateGetRequest_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.001164"
+    },
+    {
+      "fullname": "TestHTTPRequest.Test_CreatePostRequest_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000943"
+    },
+    {
+      "fullname": "TestHTTPRequest.Test_DefaultGetCurrentUri_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000899"
+    },
+    {
+      "fullname": "TestHTTPRequest.Test_DefaultGetExceptionMessage_ReturnsEmpty",
+      "result": "Passed",
+      "duration": "0.000319"
+    },
+    {
+      "fullname": "TestHTTPRequest.Test_DefaultGetState_ReturnsError",
+      "result": "Passed",
+      "duration": "0.001020"
+    },
+    {
+      "fullname": "TestHTTPRequest.Test_DefaultGetUri_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000795"
+    },
+    {
+      "fullname": "TestHTTPRequest.Test_States_EnumValues",
+      "result": "Passed",
+      "duration": "0.000316"
+    },
+    {
+      "fullname": "TestHTTPResponse.Test_DefaultGetData_IsNull",
+      "result": "Passed",
+      "duration": "0.000289"
+    },
+    {
+      "fullname": "TestHTTPResponse.Test_DefaultGetMessage_IsNull",
+      "result": "Passed",
+      "duration": "0.000251"
+    },
+    {
+      "fullname": "TestHTTPResponse.Test_DefaultIsSuccess_False",
+      "result": "Passed",
+      "duration": "0.000221"
+    },
+    {
+      "fullname": "TestHTTPResponse.Test_DefaultStatusCode_IsZero",
+      "result": "Passed",
+      "duration": "0.000224"
+    },
+    {
+      "fullname": "TestLogAdaptor.Test_PostError_MultipleCallbacks_LastWins",
+      "result": "Passed",
+      "duration": "0.000533"
+    },
+    {
+      "fullname": "TestLogAdaptor.Test_PostError_Network_NoCallback_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.000397"
+    },
+    {
+      "fullname": "TestLogAdaptor.Test_PostError_Network_WithCallback",
+      "result": "Passed",
+      "duration": "0.000374"
+    },
+    {
+      "fullname": "TestLogAdaptor.Test_PostError_String_NoCallback_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.000286"
+    },
+    {
+      "fullname": "TestLogAdaptor.Test_PostError_String_WithCallback",
+      "result": "Passed",
+      "duration": "0.000305"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Constants",
+      "result": "Passed",
+      "duration": "0.000261"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_InvalidJsonBody_ProducesErrorPayload",
+      "result": "Passed",
+      "duration": "0.004797"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_NullOrEmpty_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000313"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_Push_CompressedRoute",
+      "result": "Passed",
+      "duration": "0.002187"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_Push_TruncatedRoute_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000399"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_Push_UncompressedRoute",
+      "result": "Passed",
+      "duration": "0.001140"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_Push_UnknownCompressedRoute_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000306"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_RequestType_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000264"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_Response_ConsumedOnce_SecondReturnsNull",
+      "result": "Passed",
+      "duration": "0.000322"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_Response_RestoresRouteFromReqMap",
+      "result": "Passed",
+      "duration": "0.000718"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Decode_Response_UnknownId_ReturnsNull",
+      "result": "Passed",
+      "duration": "0.000321"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Encode_CompressedRoute_SetsRouteMaskAndTwoByteIndex",
+      "result": "Passed",
+      "duration": "0.000808"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Encode_Notify_FlagHasNotifyBit",
+      "result": "Passed",
+      "duration": "0.000309"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Encode_NullMsg_ProducesEmptyJsonBody",
+      "result": "Passed",
+      "duration": "0.000277"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Encode_Request_UncompressedRoute",
+      "result": "Passed",
+      "duration": "0.000348"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Encode_RouteAtLimit_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.000319"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Encode_RouteTooLong_Throws",
+      "result": "Passed",
+      "duration": "0.000864"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_Message_Constructor",
+      "result": "Passed",
+      "duration": "0.000300"
+    },
+    {
+      "fullname": "TestMessageProtocol.Test_MessageType_Values",
+      "result": "Passed",
+      "duration": "0.000242"
+    },
+    {
+      "fullname": "TestNetworkConst.Test_CodeConstants",
+      "result": "Passed",
+      "duration": "0.000590"
+    },
+    {
+      "fullname": "TestNetworkConst.Test_ErrorMessage",
+      "result": "Passed",
+      "duration": "0.000302"
+    },
+    {
+      "fullname": "TestNetworkConst.Test_InitEx_Defaults",
+      "result": "Passed",
+      "duration": "0.000383"
+    },
+    {
+      "fullname": "TestNetworkConst.Test_InitEx_WithParams",
+      "result": "Passed",
+      "duration": "0.000230"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_ChangeState_InvokesCallbackOnce",
+      "result": "Passed",
+      "duration": "0.001171"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_ChangeState_NullCallback_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.000396"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_ChangeState_SameState_NoCallback",
+      "result": "Passed",
+      "duration": "0.000304"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_Constructor_Callback1_SetsType",
+      "result": "Passed",
+      "duration": "0.000680"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_Constructor_Callback2_SetsType",
+      "result": "Passed",
+      "duration": "0.000383"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_Constructor_LuaCallback_SetsType",
+      "result": "Passed",
+      "duration": "0.000331"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_Constructor_LuaCallback2_SetsModuleFunc",
+      "result": "Passed",
+      "duration": "0.000292"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_Constructor_RouteOnly_DefaultState",
+      "result": "Passed",
+      "duration": "0.000899"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_DoCallback_Callback1_InvokesWithData",
+      "result": "Passed",
+      "duration": "0.000627"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_DoCallback_Callback2_InvokesWithDataAndMsg",
+      "result": "Passed",
+      "duration": "0.000389"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_DoCallback_LuaCallback_InvokesWithString",
+      "result": "Passed",
+      "duration": "0.000331"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_Update_NonProcessing_TimerUnchanged",
+      "result": "Passed",
+      "duration": "0.000308"
+    },
+    {
+      "fullname": "TestNetworkRequest.Test_Update_Processing_AccumulatesTimer",
+      "result": "Passed",
+      "duration": "0.000577"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetFileLengthString_Bytes",
+      "result": "Passed",
+      "duration": "0.000735"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetFileLengthString_GB",
+      "result": "Passed",
+      "duration": "0.000221"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetFileLengthString_KB",
+      "result": "Passed",
+      "duration": "0.000200"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetFileLengthString_MB",
+      "result": "Passed",
+      "duration": "0.000291"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetFileLengthString_TB",
+      "result": "Passed",
+      "duration": "0.000243"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetFileLengthString_Zero",
+      "result": "Passed",
+      "duration": "0.000206"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetHostFromUrl_Https",
+      "result": "Passed",
+      "duration": "0.000451"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetHostFromUrl_Standard",
+      "result": "Passed",
+      "duration": "0.000230"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetIPFromHost_InvalidHost",
+      "result": "Passed",
+      "duration": "0.062902"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_GetTimeStamp_ReturnsPositive",
+      "result": "Passed",
+      "duration": "0.000752"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_Sign_JsonObject_Basic",
+      "result": "Passed",
+      "duration": "0.003379"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_Sign_JsonObject_Deterministic",
+      "result": "Passed",
+      "duration": "0.000470"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_Sign_JsonObject_EmptyInput",
+      "result": "Passed",
+      "duration": "0.000249"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_Sign_JsonObject_NullInput",
+      "result": "Passed",
+      "duration": "0.000189"
+    },
+    {
+      "fullname": "TestNetworkUtil.Test_Sign_StringMessage_WithParams",
+      "result": "Passed",
+      "duration": "0.000611"
+    },
+    {
+      "fullname": "TestOptionalBestHTTP.ConfiguredDiagnosticsRemainDisabledWithoutPlugin",
+      "result": "Passed",
+      "duration": "0.002425"
+    },
+    {
+      "fullname": "TestOptionalBestHTTP.SelectingMissingBackendFailsExplicitly",
+      "result": "Passed",
+      "duration": "0.000821"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Decode_ExactlyHeader_ReturnsEmptyBody",
+      "result": "Passed",
+      "duration": "0.000693"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Decode_NullBuffer_Throws",
+      "result": "Passed",
+      "duration": "0.000484"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Decode_RoundTrip",
+      "result": "Passed",
+      "duration": "0.001229"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Decode_TooShortBuffer_Throws",
+      "result": "Passed",
+      "duration": "0.000326"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Encode_LargeBody_ThreeByteLength",
+      "result": "Passed",
+      "duration": "0.000379"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Encode_TypeOnly_ProducesFourZeroLengthBytes",
+      "result": "Passed",
+      "duration": "0.000240"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Encode_WithBody_WritesBigEndianLength",
+      "result": "Passed",
+      "duration": "0.000312"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Encode_WithEmptyBody_HeaderOnly",
+      "result": "Passed",
+      "duration": "0.000196"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Encode_WithNullBody_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.000316"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Package_Constructor_NullBody_LengthZero",
+      "result": "Passed",
+      "duration": "0.000264"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_Package_Constructor_SetsLengthFromBody",
+      "result": "Passed",
+      "duration": "0.000274"
+    },
+    {
+      "fullname": "TestPackageProtocol.Test_PackageType_Values",
+      "result": "Passed",
+      "duration": "0.000231"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Clear_DropsPendingBytes",
+      "result": "Passed",
+      "duration": "0.002082"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Constructor_NullCallback_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.000529"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Dispose_StopsCallbacks",
+      "result": "Passed",
+      "duration": "0.000377"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_ByteByByte",
+      "result": "Passed",
+      "duration": "0.000484"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_FragmentedPackage",
+      "result": "Passed",
+      "duration": "0.000436"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_HeartbeatNoBody",
+      "result": "Passed",
+      "duration": "0.000373"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_IllegalLength_DiscardsBufferNoHang",
+      "result": "Passed",
+      "duration": "0.000751"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_MultiplePackagesThenFragment",
+      "result": "Passed",
+      "duration": "0.000718"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_NullOrEmpty_NoCallback",
+      "result": "Passed",
+      "duration": "0.001002"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_SingleCompletePackage",
+      "result": "Passed",
+      "duration": "0.000595"
+    },
+    {
+      "fullname": "TestPackageStream.Test_Feed_StickyPackets_TwoAtOnce",
+      "result": "Passed",
+      "duration": "0.000506"
+    },
+    {
+      "fullname": "TestUIAdaptor.Test_GetText_NoCallback_ReturnsOriginal",
+      "result": "Passed",
+      "duration": "0.000392"
+    },
+    {
+      "fullname": "TestUIAdaptor.Test_GetText_WithCallback_TransformsText",
+      "result": "Passed",
+      "duration": "0.000420"
+    },
+    {
+      "fullname": "TestUIAdaptor.Test_ShowDialog_NoCallback_CallsTrue",
+      "result": "Passed",
+      "duration": "0.000636"
+    },
+    {
+      "fullname": "TestUIAdaptor.Test_ShowDialog_WithCallback_Delegates",
+      "result": "Passed",
+      "duration": "0.000610"
+    },
+    {
+      "fullname": "TestUIAdaptor.Test_ShowDialog_WithLocalizedText",
+      "result": "Passed",
+      "duration": "0.000866"
+    },
+    {
+      "fullname": "TestUIAdaptor.Test_ShowWaiting_NoCallback_DoesNotThrow",
+      "result": "Passed",
+      "duration": "0.000529"
+    },
+    {
+      "fullname": "TestUIAdaptor.Test_ShowWaiting_WithCallback_Invokes",
+      "result": "Passed",
+      "duration": "0.000510"
+    },
+    {
+      "fullname": "TestWsCodec.Test_ByteLength_Ascii",
+      "result": "Passed",
+      "duration": "0.000314"
+    },
+    {
+      "fullname": "TestWsCodec.Test_ByteLength_Empty",
+      "result": "Passed",
+      "duration": "0.000193"
+    },
+    {
+      "fullname": "TestWsCodec.Test_ByteLength_MultiByteUtf8",
+      "result": "Passed",
+      "duration": "0.000164"
+    },
+    {
+      "fullname": "TestWsCodec.Test_DecodeUInt32_StopsAtContinuationBit",
+      "result": "Passed",
+      "duration": "0.000214"
+    },
+    {
+      "fullname": "TestWsCodec.Test_DecodeUInt32_WithOffset",
+      "result": "Passed",
+      "duration": "0.000376"
+    },
+    {
+      "fullname": "TestWsCodec.Test_EncodeUInt32_128",
+      "result": "Passed",
+      "duration": "0.000278"
+    },
+    {
+      "fullname": "TestWsCodec.Test_EncodeUInt32_SingleByte",
+      "result": "Passed",
+      "duration": "0.000247"
+    },
+    {
+      "fullname": "TestWsCodec.Test_EncodeUInt32_TwoBytes",
+      "result": "Passed",
+      "duration": "0.000219"
+    },
+    {
+      "fullname": "TestWsCodec.Test_EncodeUInt32_Zero",
+      "result": "Passed",
+      "duration": "0.000205"
+    },
+    {
+      "fullname": "TestWsCodec.Test_SInt32_RoundTrip(0)",
+      "result": "Passed",
+      "duration": "0.000644"
+    },
+    {
+      "fullname": "TestWsCodec.Test_SInt32_RoundTrip(1)",
+      "result": "Passed",
+      "duration": "0.000170"
+    },
+    {
+      "fullname": "TestWsCodec.Test_SInt32_RoundTrip(-1)",
+      "result": "Passed",
+      "duration": "0.000127"
+    },
+    {
+      "fullname": "TestWsCodec.Test_SInt32_RoundTrip(2)",
+      "result": "Passed",
+      "duration": "0.000101"
+    },
+    {
+      "fullname": "TestWsCodec.Test_SInt32_RoundTrip(-2)",
+      "result": "Passed",
+      "duration": "0.000082"
+    },
+    {
+      "fullname": "TestWsCodec.Test_SInt32_RoundTrip(100)",
+      "result": "Passed",
+      "duration": "0.000074"
+    },
+    {
+      "fullname": "TestWsCodec.Test_SInt32_RoundTrip(-100)",
+      "result": "Passed",
+      "duration": "0.000074"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(uint.MinValue)",
+      "result": "Passed",
+      "duration": "0.000639"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(1)",
+      "result": "Passed",
+      "duration": "0.000235"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(127)",
+      "result": "Passed",
+      "duration": "0.000174"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(128)",
+      "result": "Passed",
+      "duration": "0.000145"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(300)",
+      "result": "Passed",
+      "duration": "0.000103"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(16383)",
+      "result": "Passed",
+      "duration": "0.000087"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(16384)",
+      "result": "Passed",
+      "duration": "0.000117"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(2097151)",
+      "result": "Passed",
+      "duration": "0.000150"
+    },
+    {
+      "fullname": "TestWsCodec.Test_UInt32_RoundTrip(uint.MaxValue)",
+      "result": "Passed",
+      "duration": "0.000136"
+    }
+  ],
+  "limitations": [
+    "No BestHTTP plugin integration or EagleEye service test.",
+    "No real HTTPDNS/WebSocket/Pomelo server integration.",
+    "No Unity execution in GitHub Actions; this is a local run."
+  ]
+}
